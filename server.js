@@ -15,7 +15,7 @@ class Server{
 		this.server.listen(port, ()=>{
 			console.log('on port', port);
 		});
-	}
+	};
 };
 
 db.sync()
@@ -23,6 +23,6 @@ db.sync()
 	this.server = new Server(server);
 	this.server.start(port);
 	this.gdax   = new Gdax();
-	this.gdax.stream();
+	this.gdax.ingestStream();
 });
 

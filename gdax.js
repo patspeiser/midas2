@@ -12,11 +12,11 @@ class Gdax {
 		);
 	};
 
-	get stream(){
+	ingestStream(){
 		this.socket.on('message', data =>{
-			//console.log(data);
+			console.log(data);
 		});
 	};
-}
+};
 
 module.exports = Gdax;
