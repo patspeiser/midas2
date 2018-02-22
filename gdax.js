@@ -25,6 +25,7 @@ class Gdax {
 	processStream(){
 		this.buffer.processBuffer(this.messages);
 	};
+	getAccounts(){};
 };
 
 module.exports = Gdax;
