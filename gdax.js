@@ -19,7 +19,7 @@ class Gdax {
 		this.socket.on('message', data =>{
 			if(data.type === 'done' && data.reason === 'filled' && data.price){
 				this.buffer.addEventToCollection(data, this.messages);
-			}
+			};
 		});
 	};
 	processStream(){
