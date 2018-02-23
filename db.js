@@ -22,10 +22,20 @@ const ValidPrice = db.define('valid_price', {
 	time: 		{type: db.Sequelize.STRING}, 
 });
 
+const Account = db.define('account', {
+	account_id:   	    {type: db.Sequelize.STRING},
+	currency: 			{type: db.Sequelize.STRING},
+	balance  : 			{type: db.Sequelize.STRING},
+	available    : 		{type: db.Sequelize.STRING},
+	hold: 				{type: db.Sequelize.JSON},
+	profile_id: 		{type: db.Sequelize.STRING},
+});
+
 module.exports = {
 	db: db,
 	models: {
-		Ticker: Ticker,
-		ValidPrice: ValidPrice
+		Ticker:     Ticker,
+		ValidPrice: ValidPrice,
+		Account:    Account
 	}
-}
+};
