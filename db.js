@@ -1,7 +1,7 @@
 const Sequelize = require('sequelize');
 const Op = Sequelize.Op;
 const urlString = "postgres://postgres:postgres@localhost/midas2";
-const db = new Sequelize(process.env.DATABASE_URL || urlString, {logging: false});
+const db = new Sequelize(process.env.DATABASE_URL || urlString, {logging: true});
 
 const Ticker = db.define('ticker', {
 	type: 		{type: db.Sequelize.STRING},
@@ -25,8 +25,8 @@ const ValidPrice = db.define('valid_price', {
 const Account = db.define('account', {
 	account_id:   	    {type: db.Sequelize.STRING},
 	currency: 			{type: db.Sequelize.STRING},
-	balance  : 			{type: db.Sequelize.STRING},
-	available    : 		{type: db.Sequelize.STRING},
+	balance: 			{type: db.Sequelize.STRING},
+	available:   		{type: db.Sequelize.STRING},
 	hold: 				{type: db.Sequelize.JSON},
 	profile_id: 		{type: db.Sequelize.STRING},
 });
