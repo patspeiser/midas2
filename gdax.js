@@ -3,27 +3,30 @@ const path = require('path');
 const chalk = require('chalk');
 const config = require(path.join(__dirname, 'config')).config.gdax;
 const Account = require(path.join(__dirname,'db')).models.Account;
+const Ticker = require(path.join(__dirname,'db')).models.Ticker;
 const Buffer = require(path.join(__dirname, 'Buffer'));
-const Util = require(path.join(__dirname, 'Util'));
 
 class Gdax {
 	constructor(){
-		this.products = ['BCH-BTC','ETH-BTC','LTC-BTC',];
+		this.products = ['BCH-BTC','ETH-BTC','LTC-BTC','BTC-USD'];
 		this.socket = new gdax.WebsocketClient(this.products,config.websocketUrl,null,['full']);
 		this.client = new gdax.AuthenticatedClient(config.auth.apiKey, config.auth.apiSecret, config.auth.passphrase, config.baseUrl);
 		this.buffer = new Buffer();
 		this.messages = this.buffer.addCollection('message');
-		this.util     = new Util();
+		this.valids   = this.buffer.addCollection('valids');
 	};
 	ingestStream(){
 		this.socket.on('message', data =>{
-			if(data.type === 'done' && data.reason === 'filled' && data.price){
+			if(data.type === 'done' && data.reason === 'filled' && data.product_id && data.price){
 				this.buffer.addEventToCollection(data, this.messages);
 			};
 		});
+		this.socket.on('error', err =>{
+			console.log(err);
+		});
 	};
 	processStream(){
-		this.buffer.processBuffer(this.messages);
+		this.buffer.processBuffer(this.messages, this.valids);
 	};
 	updateAccounts(){
 		this.client.getAccounts().then( (accounts)=>{

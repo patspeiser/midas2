@@ -3,7 +3,7 @@ const path  = require('path');
 class Decision {
 	constructor(){};
 	evaluate(){
-		console.log('evaluate data');
+		//console.log('evaluate data');
 	}
 }
 

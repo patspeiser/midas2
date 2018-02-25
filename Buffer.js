@@ -22,38 +22,21 @@ class Buffer{
 	getAllEventsInCollection(collection){
 		return collection.chain().data();
 	};
-	validateEventPrice(event){
-		this.event      = event;
-		this.upperBound = 1.02;
-		this.lowerBound =  .98;
-		ValidPrice.findOne({where: { product_id: this.event.product_id } }).then( (validPrice)=>{
-			if(validPrice){
-					if(this.event.price < validPrice.price * this.upperBound && this.event.price >= validPrice.price * this.lowerBound){
-						Ticker.create(this.event);
-						validPrice.price = this.event.price;
-						validPrice.save().then( (err, row)=>{});
-					} else {
-						console.log(chalk.red('shitty price', chalk.red(this.event.product_id), chalk.red(this.event.price), validPrice.price));
-					};
-			} else {
-				this.validToCreate = { 
-					product_id: this.event.product_id,
-					price:      this.event.price,
-					time:       Date.now()
-				};
-				ValidPrice.create(this.validToCreate);
-			};
-		});
-	};
+	findOrCreateValidPrices(prices){
+		this.prices = prices;
+		console.log('prices>', prices);
+	}
 	processBuffer(collection){
 		this.events = this.getAllEventsInCollection(collection);
-		if(this.events.length > 0){
-			console.log('buffering...', this.events.length);
-			for(let i = 0; i < this.events.length; i++){
-				this.validateEventPrice(this.events[i]);
-				this.removeEventFromCollection(this.events[i], collection);
-			};	
-		};
+		this.events.forEach( event =>{
+			if(event.product_id === 'BTC-USD' && event.price < 9000){
+				console.log(chalk.gray(JSON.stringify(event)));
+			}
+			if(event.product_id === 'BTC-USD' && event.price > 10000){
+				console.log(chalk.magenta(JSON.stringify(event)));
+			}
+			Ticker.create(event);
+		});
 	};
 };
 

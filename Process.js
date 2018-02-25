@@ -5,7 +5,7 @@ class Process{
 	constructor(context, fn, interval){
 		setInterval( ()=>{
 			fn.call(context,);
-		}, interval)
+		}, interval);
 	};
 };
 
