@@ -33,6 +33,7 @@ const Account = db.define('account', {
 
 module.exports = {
 	db: db,
+	Op: Op,
 	models: {
 		Ticker:     Ticker,
 		ValidPrice: ValidPrice,
