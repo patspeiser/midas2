@@ -7,13 +7,14 @@ const Ticker = require(path.join(__dirname,'db')).models.Ticker;
 const Buffer = require(path.join(__dirname, 'Buffer'));
 
 class Gdax {
-	constructor(){
+	constructor(initialPrices){
 		this.products = ['BCH-BTC','ETH-BTC','LTC-BTC','BTC-USD'];
 		this.socket = new gdax.WebsocketClient(this.products,config.websocketUrl,null,['full']);
 		this.client = new gdax.AuthenticatedClient(config.auth.apiKey, config.auth.apiSecret, config.auth.passphrase, config.baseUrl);
 		this.buffer = new Buffer();
 		this.messages = this.buffer.addCollection('message');
 		this.valids   = this.buffer.addCollection('valids');
+		this.buffer.addEventToCollection(initialPrices, this.valids);
 	};
 	ingestStream(){
 		this.socket.on('message', data =>{

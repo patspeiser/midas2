@@ -4,7 +4,6 @@ const chalk = require('chalk');
 const db = require(path.join(__dirname, 'db'));
 const Models = db.models;
 const Ticker = Models.Ticker;
-const ValidPrice = Models.ValidPrice;
 
 class Buffer{
 	constructor(){
@@ -26,18 +25,36 @@ class Buffer{
 		this.prices = prices;
 		console.log('prices>', prices);
 	}
-	processBuffer(collection){
+	processBuffer(collection, valids){
+		this.upperBound = 1.02;
+		this.lowerBound = .98;
 		this.events = this.getAllEventsInCollection(collection);
+		this.valids = this.getAllEventsInCollection(valids);
 		this.events.forEach( event =>{
-			if(event.product_id === 'BTC-USD' && event.price < 9000){
-				console.log(chalk.gray(JSON.stringify(event)));
-			}
-			if(event.product_id === 'BTC-USD' && event.price > 10000){
-				console.log(chalk.magenta(JSON.stringify(event)));
-			}
-			Ticker.create(event);
+			console.log(event);
+			this.valids.map( (v)=>{
+				this.validPrice = v[event.product_id];
+				if(event && event.product_id && v && this.validPrice){
+					if(event.price < this.validPrice * this.upperBound && event.price > this.validPrice > this.lowerBound){
+						console.log('old price', this.validPrice);
+						this.validPrice = event.price; 
+						valids.update(v);
+						console.log('new price', v[event.product_id]);
+						Ticker.create(event).then( ()=>{
+							this.removeEventFromCollection(event, collection);
+						});
+					}
+				}
+			});
 		});
 	};
 };
 
 module.exports = Buffer;
+/*
+[ { 'BTC-USD': 9661,
+    'BCH-BTC': 0.12291,
+    'ETH-BTC': 0.08758,
+    'LTC-BTC': 0.02276,
+    meta: { revision: 0, created: 1519601200669, version: 0 },
+    '$loki': 1 } ]*/
