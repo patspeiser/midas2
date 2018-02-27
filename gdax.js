@@ -4,6 +4,7 @@ const chalk = require('chalk');
 const config = require(path.join(__dirname, 'config')).config.gdax;
 const Account = require(path.join(__dirname,'db')).models.Account;
 const Ticker = require(path.join(__dirname,'db')).models.Ticker;
+const Transaction = require(path.join(__dirname,'db')).models.Transaction;
 const Buffer = require(path.join(__dirname, 'Buffer'));
 
 class Gdax {
@@ -19,6 +20,7 @@ class Gdax {
 	ingestStream(){
 		this.socket.on('message', data =>{
 			if(data.type === 'done' && data.reason === 'filled' && data.product_id && data.price){
+				console.log(chalk.gray(JSON.stringify(data)));
 				this.buffer.addEventToCollection(data, this.messages);
 			};
 		});

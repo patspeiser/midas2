@@ -3,22 +3,122 @@ const path  = require('path');
 const moment = require('moment');
 const Op = require(path.join(__dirname, 'db')).Op;
 const Ticker = require(path.join(__dirname,'db')).models.Ticker;
+const Transaction = require(path.join(__dirname,'db')).models.Transaction;
 
 class Decision {
 	constructor(){};
+	determine(){
+		this.evaluate();
+		/*Transaction.findOne({
+			order: [['id', 'DESC']],
+			limit: 1
+		}).then( transaction =>{
+			this.transaction = transaction;
+			if(!this.transaction){
+				console.log('no transaction.');
+				//buy
+			};
+			if (this.transaction){
+				console.log('transaction');
+				this.side = this.transaction.side;
+				this.products = this.transaction.product_id.split('-');
+				this.qouteCurrency = this.products[0];
+				this.baseCurrency  = this.products[1];
+				if(this.side === 'sell'){
+					//evaluate and buy
+				};
+				if(this.side === 'buy'){
+					this.product = this.products[0];
+					Tickers.findOne({
+						where: {
+							product_id: this.transaction.product_id
+						},
+						order: [['id', 'DESC']],
+						limit: 1
+					}).then( ticker =>{
+						this.ticker = ticker;
+						if(this.ticker.price > this.transaction.price){
+							if(Date.now() - this.transaction.time < 1000 * 60){
+								if(this.ticker.price > this.transaction.price * 1.02){
+									//sell	
+								};
+							} else {
+									//sell
+							};
+						} else {
+							if(Date.now() - this.transaction.time < 1000 * 60){
+								if(this.ticker.price < this.transaction.price * .98){
+									//sell
+								};
+							} else {
+								//sell
+							};
+						};
+					});
+				};
+			};
+		});
+		//check our last trade.
+		//if a buy we own first half of product
+		//if the price isn't down we keep holding it
+			//if goal price sell
+			//if too long
+				//sell	
+		//if it is down 
+			//is it down too much -> sell 
+			//is it down too long -> sell
+		//else a sell we own second half
+			//eval and buy
+			*/
+	}
 	evaluate(){
+		console.log('%%%%%%%%%%%%%%%');
 		this.interval = {amount: 30, type: 'minutes'};
 		this.products = ['BCH-BTC','ETH-BTC','LTC-BTC','BTC-USD'];	
 		this.getProducts(this.interval, this.products)
 		.then( prods=>{
 			if(prods){
+				this.datasets = [];
 				prods.forEach(product=>{
+					console.log(product);
 					this.product = product.reverse();
-					this.info = this.getDataSetInfo(this.product);	
-					console.log('#', this.info);
+					if(this.product && this.product.length > 0){
+						this.info = this.getDataSetInfo(this.product);
+						console.log('#', this.info);
+						this.datasets.push(this.info);	
+					}
 				});
+				this.rec = this.createRecommendation(this.datasets);
+				console.log(chalk.magenta(JSON.stringify(this.rec)));
 			}
 		});
+	};
+	createRecommendation(rows){
+		this.rows = rows;
+		this.stats = {
+			highestGain : 0,
+			highestLoss : 0
+		};
+		/*
+		this.rows.forEach( (row)=>{
+			console.log('###', row);
+			this.dataSet = row;
+			//console.log(this.dataSet.product_id, this.dataSet.long.gainOrLoss, this.dataSet.long.slope, this.dataSet.short.slope);
+			if (this.dataSet.long.slope > 0){
+				if(this.dataSet.short.slope < 0){
+					if(this.dataSet.long.gainOrLoss > this.stats.highestGain){
+						this.stats.highestGain = this.dataSet.long.gainOrLoss;
+						this.stats['highestGainProductId'] = this.dataSet.product_id;
+						this.stats['highestGainMostRecentPrice'] = this.dataSet.mostRecentPrice;
+						this.stats['highestGainAveragePrice'] = this.dataSet.long.averagePrice;
+					};
+				}
+			}	
+		});
+		*/
+		if(this.stats.highestGainProductId){
+			return this.stats;
+		};
 	};
 	getProducts(interval, productList){
 		this.promises = []; 
@@ -136,7 +236,6 @@ class Decision {
 					return this.set;
 				}
 			};
-
 			this.data = {
 				product_id:         this.product_id,
 				mostRecentPrice: 	this.mostRecentPrice,

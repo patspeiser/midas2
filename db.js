@@ -30,6 +30,14 @@ const Account = db.define('account', {
 	hold: 				{type: db.Sequelize.JSON},
 	profile_id: 		{type: db.Sequelize.STRING},
 });
+const Transaction = db.define('transaction', {
+	transaction_id: {type: db.Sequelize.STRING},
+	product_id:  	{type: db.Sequelize.STRING},
+	price: 			{type: db.Sequelize.FLOAT},
+	size:           {type: db.Sequelize.FLOAT},
+	side:  			{type: db.Sequelize.STRING},
+	time:           {type: db.Sequelize.STRING}, 
+});
 
 module.exports = {
 	db: db,
@@ -37,6 +45,7 @@ module.exports = {
 	models: {
 		Ticker:     Ticker,
 		ValidPrice: ValidPrice,
-		Account:    Account
+		Account:    Account,
+		Transaction: Transaction
 	}
 };
