@@ -64,6 +64,12 @@ class Gdax {
 			});
 		});
 	};
+	displayValidPrices(){
+		console.log('-----------');
+		this.valids.data.map( (e)=>{
+			console.log(chalk.cyan(JSON.stringify(e)));
+		});	
+	};
 };
 
 module.exports = Gdax;

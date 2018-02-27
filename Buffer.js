@@ -25,6 +25,7 @@ class Buffer{
 		this.prices = prices;
 		console.log('prices>', prices);
 	};
+	
 	processBuffer(collection, valids){
 		this.upperBound = 1.02;
 		this.lowerBound = .98;
@@ -34,12 +35,14 @@ class Buffer{
 			this.valids.map( (v)=>{
 				this.validPrice = v[event.product_id];
 				if(event && event.product_id && v && this.validPrice){
-					if(event.price < this.validPrice * this.upperBound && event.price > this.validPrice > this.lowerBound){
-						this.validPrice = event.price; 
+					if(event.price < this.validPrice * this.upperBound && event.price > this.validPrice * this.lowerBound){
+						v[event.product_id] = event.price;
 						valids.update(v);
 						Ticker.create(event).then( (e)=>{
 							this.removeEventFromCollection(event, collection);
 						});
+					} else {
+						console.log(chalk.red('shitty price'), event.product_id, event.price);
 					}
 				}
 			});
