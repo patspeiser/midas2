@@ -47,19 +47,19 @@ class Gdax {
 					}	
 				});
 			};
-			if (this.transaction){
+			if(this.transaction){
 				console.log('transaction');
 				this.side = this.transaction.side;
-				this.products = this.transaction.product_id.split('-');
-				this.qouteCurrency = this.products[0];
-				this.baseCurrency  = this.products[1];
+				this.product = this.transaction.product_id.split('-');
+				this.qouteCurrency = this.product[0];
+				this.baseCurrency  = this.product[1];
 				if(this.side === 'sell'){
 					this.decision.evaluate().then( (e)=>{
 						this.marketBuy(e);	
 					});
 				};
 				if(this.side === 'buy'){
-					this.product = this.products[0];
+					this.product = this.products;
 					Tickers.findOne({
 						where: {
 							product_id: this.transaction.product_id
@@ -92,21 +92,28 @@ class Gdax {
 	};
 	marketBuy(rec){
 		this.rec = rec;
-		if(this.rec){
-			this.orderParams = {
-				side: this.side,
-				type: 'market',
-				size: this.account.available, 
-				product_id: this.product_id,
-			};
-			Gdax.placeOrder(this.orderParams, (err, res, data)=>{
-				if (err){
-					console.log('err', err);
-				} else {
-					console.log('hup!');
+		this.product = this.rec.highestGainProductId;
+		this.currencyNeeded = this.product.split('-')[1]; 
+		Account.findOne({where: {currency: this.currencyNeeded}})
+		.then( (account)=>{
+			this.account = account;
+			if(this.rec && this.account){
+				this.orderParams = {
+					side: 'buy',
+					type: 'market',
+					size: this.account.available, 
+					product_id: this.product,
 				};
-			});
-		};
+				console.log(chalk.green(JSON.stringify(this.orderParams)));
+				this.client.placeOrder(this.orderParams, (err, res, data)=>{
+					if (err){
+						console.log('err', err);
+					} else {
+						console.log('hup!');
+					};
+				});
+			};
+		});
 	};
 	marketSell(){}
 	updateAccounts(){
