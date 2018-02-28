@@ -6,6 +6,7 @@ const Account = require(path.join(__dirname,'db')).models.Account;
 const Ticker = require(path.join(__dirname,'db')).models.Ticker;
 const Transaction = require(path.join(__dirname,'db')).models.Transaction;
 const Buffer = require(path.join(__dirname, 'Buffer'));
+const Decision 	= require(path.join(__dirname, 'Decision'));
 
 class Gdax {
 	constructor(initialPrices){
@@ -16,11 +17,12 @@ class Gdax {
 		this.messages = this.buffer.addCollection('message');
 		this.valids   = this.buffer.addCollection('valids');
 		this.buffer.addEventToCollection(initialPrices, this.valids);
+		this.decision  = new Decision();
 	};
 	ingestStream(){
 		this.socket.on('message', data =>{
 			if(data.type === 'done' && data.reason === 'filled' && data.product_id && data.price){
-				console.log(chalk.gray(JSON.stringify(data)));
+				//console.log(chalk.gray(JSON.stringify(data)));
 				this.buffer.addEventToCollection(data, this.messages);
 			};
 		});
@@ -31,6 +33,82 @@ class Gdax {
 	processStream(){
 		this.buffer.processBuffer(this.messages, this.valids);
 	};
+	determine(){
+		Transaction.findOne({
+			order: [['id', 'DESC']],
+			limit: 1
+		}).then( transaction =>{
+			this.transaction = transaction;
+			if(!this.transaction){
+				console.log('no transaction.');
+				this.decision.evaluate().then( (e)=>{
+					if(e){
+						this.marketBuy(e);
+					}	
+				});
+			};
+			if (this.transaction){
+				console.log('transaction');
+				this.side = this.transaction.side;
+				this.products = this.transaction.product_id.split('-');
+				this.qouteCurrency = this.products[0];
+				this.baseCurrency  = this.products[1];
+				if(this.side === 'sell'){
+					this.decision.evaluate().then( (e)=>{
+						this.marketBuy(e);	
+					});
+				};
+				if(this.side === 'buy'){
+					this.product = this.products[0];
+					Tickers.findOne({
+						where: {
+							product_id: this.transaction.product_id
+						},
+						order: [['id', 'DESC']],
+						limit: 1
+					}).then( ticker =>{
+						this.ticker = ticker;
+						if(this.ticker.price > this.transaction.price){
+							if(Date.now() - this.transaction.time < 1000 * 60){
+								if(this.ticker.price > this.transaction.price * 1.02){
+									//marketsell	
+								};
+							} else {
+									//marketsell
+								};
+							} else {
+								if(Date.now() - this.transaction.time < 1000 * 60){
+									if(this.ticker.price < this.transaction.price * .98){
+									//sell
+								};
+							} else {
+								//sell
+							};
+						};
+					});
+				};
+			};	
+		});
+	};
+	marketBuy(rec){
+		this.rec = rec;
+		if(this.rec){
+			this.orderParams = {
+				side: this.side,
+				type: 'market',
+				size: this.account.available, 
+				product_id: this.product_id,
+			};
+			Gdax.placeOrder(this.orderParams, (err, res, data)=>{
+				if (err){
+					console.log('err', err);
+				} else {
+					console.log('hup!');
+				};
+			});
+		};
+	};
+	marketSell(){}
 	updateAccounts(){
 		this.client.getAccounts().then( (accounts)=>{
 			accounts.forEach( (account)=>{
