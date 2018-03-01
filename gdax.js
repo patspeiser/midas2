@@ -22,7 +22,7 @@ class Gdax {
 	ingestStream(){
 		this.socket.on('message', data =>{
 			if(data.type === 'done' && data.reason === 'filled' && data.product_id && data.price){
-				//console.log(chalk.gray(JSON.stringify(data)));
+				console.log(chalk.gray(JSON.stringify(data)));
 				this.buffer.addEventToCollection(data, this.messages);
 			};
 		});
@@ -59,7 +59,6 @@ class Gdax {
 					});
 				};
 				if(this.side === 'buy'){
-					this.product = this.products;
 					Tickers.findOne({
 						where: {
 							product_id: this.transaction.product_id
@@ -69,20 +68,24 @@ class Gdax {
 					}).then( ticker =>{
 						this.ticker = ticker;
 						if(this.ticker.price > this.transaction.price){
-							if(Date.now() - this.transaction.time < 1000 * 60){
+							this.timeSince = Date.now() - this.transaction.time;
+							if(this.timeSince < 1000 * 60){
+								//less than min time only sell if over goal or big loss
 								if(this.ticker.price > this.transaction.price * 1.02){
-									//marketsell	
+									this.marketSell(this.product, this.ticker.price);	
+								} 
+								if(this.ticker.price < this.transaction.price * .99){
+									this.marketSell(this.product, this.ticker.price);	
 								};
-							} else {
-									//marketsell
+							};
+							if(this.timeSince > 1000 * 60){
+								//over min time but less than max time
+								if( this.timeSince > this.minTime && this.timeSince < this.maxTime ){
+									//idk think of something	
 								};
-							} else {
-								if(Date.now() - this.transaction.time < 1000 * 60){
-									if(this.ticker.price < this.transaction.price * .98){
-									//sell
-								};
-							} else {
-								//sell
+								if(this.timeSince > this.maxTime){
+									this.marketSell(this.product, this.ticker.price);
+								}
 							};
 						};
 					});
@@ -97,7 +100,7 @@ class Gdax {
 		Account.findOne({where: {currency: this.currencyNeeded}})
 		.then( (account)=>{
 			this.account = account;
-			if(this.rec && this.account){
+			if(this.rec && this.account && this.account.available > .01){
 				this.orderParams = {
 					side: 'buy',
 					type: 'market',
@@ -109,13 +112,53 @@ class Gdax {
 					if (err){
 						console.log('err', err);
 					} else {
-						console.log('hup!');
+						Transaction.create({
+							transaction_id: data.id, 
+							product_id:  	data.product_id,
+							price: 			rec.highestGainMostRecentPrice,
+							amount:         data.amount,
+							side:  			data.side,
+							time:           Date.now()
+						});
 					};
 				});
 			};
 		});
 	};
-	marketSell(){}
+	marketSell(product, price){
+		//price here is pointless in a market sell. just used to market a price in the 
+		//transaction table 
+		this.product = product;
+		this.currencyNeeded = this.product.split('-')[0]; 
+		Account.findOne({where: {currency: this.currencyNeeded}})
+		.then( (account)=>{
+			this.account = account;
+			if(this.rec && this.account && this.account.available > .01){
+				this.orderParams = {
+					side: 'sell',
+					type: 'market',
+					product_id: this.product,
+					size: this.account.available
+				}	
+				console.log(chalk.green(JSON.stringify(this.orderParams)));
+				this.client.placeOrder(this.orderParams, (err, res, data)=>{
+					if (err){
+						console.log('err', err);
+					} else {
+						Transaction.create({
+							transaction_id: data.id, 
+							product_id:  	data.product_id,
+							price: 			price,
+							amount:         data.amount,
+							side:  			data.side,
+							time:           Date.now()
+						});
+						console.log('hup!');
+					};
+				});
+			};
+		});
+	}
 	updateAccounts(){
 		this.client.getAccounts().then( (accounts)=>{
 			accounts.forEach( (account)=>{
