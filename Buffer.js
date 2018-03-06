@@ -42,7 +42,7 @@ class Buffer{
 							this.removeEventFromCollection(event, collection);
 						});
 					} else {
-						console.log(chalk.red('shitty price'), event.product_id, event.price);
+						//console.log(chalk.red('shitty price'), event.product_id, event.price);
 					}
 				}
 			});
@@ -51,10 +51,3 @@ class Buffer{
 };
 
 module.exports = Buffer;
-/*
-[ { 'BTC-USD': 9661,
-    'BCH-BTC': 0.12291,
-    'ETH-BTC': 0.08758,
-    'LTC-BTC': 0.02276,
-    meta: { revision: 0, created: 1519601200669, version: 0 },
-    '$loki': 1 } ]*/

@@ -10,7 +10,7 @@ class Decision {
 	evaluate(){
 		return new Promise( (resolve, reject)=>{
 			this.interval = {amount: 30, type: 'minutes'};
-			this.products = ['BCH-BTC','ETH-BTC','LTC-BTC','BTC-USD'];	
+			this.products = ['BCH-BTC','ETH-BTC','LTC-BTC'];	
 			return this.getProducts(this.interval, this.products)
 			.then( prods=>{
 				if(prods){

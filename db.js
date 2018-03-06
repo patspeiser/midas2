@@ -4,16 +4,16 @@ const urlString = "postgres://postgres:postgres@localhost/midas2";
 const db = new Sequelize(process.env.DATABASE_URL || urlString, {logging: false});
 
 const Ticker = db.define('ticker', {
-	type: 		{type: db.Sequelize.STRING},
-	order_id: 	{type: db.Sequelize.STRING},
-	order_type: {type: db.Sequelize.STRING},
-	size: 		{type: db.Sequelize.FLOAT},
-	price: 		{type: db.Sequelize.FLOAT},
-	side: 		{type: db.Sequelize.STRING},
-	client_oid: {type: db.Sequelize.STRING},
-	product_id: {type: db.Sequelize.STRING},
-	sequence:   {type: db.Sequelize.FLOAT},
-	time: 		{type: db.Sequelize.STRING} 
+	type:  			{type: db.Sequelize.STRING},
+	trade_id:  		{type: db.Sequelize.STRING},
+	maker_order_id: {type: db.Sequelize.STRING},
+	taker_order_id: {type: db.Sequelize.STRING},
+	side: 			{type: db.Sequelize.STRING},
+	size: 			{type: db.Sequelize.FLOAT},
+	price: 			{type: db.Sequelize.FLOAT},
+	product_id: 	{type: db.Sequelize.STRING},
+	sequence: 		{type: db.Sequelize.STRING},
+	time: 			{type: db.Sequelize.STRING},
 });
 
 const ValidPrice = db.define('valid_price', {
@@ -37,6 +37,7 @@ const Transaction = db.define('transaction', {
 	size:           {type: db.Sequelize.FLOAT},
 	side:  			{type: db.Sequelize.STRING},
 	time:           {type: db.Sequelize.STRING}, 
+	amount:         {type: db.Sequelize.FLOAT}, 
 });
 
 module.exports = {

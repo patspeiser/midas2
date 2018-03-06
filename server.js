@@ -1,7 +1,6 @@
 const path   	= require('path');
 const chalk  	= require('chalk');
-const app    	= require(path.join(__dirname, 'app'));
-const server 	= require('http').createServer(app);
+const server 	= require('http').createServer();
 const db 	 	= require(path.join(__dirname, 'db')).db;
 const Gdax   	= require(path.join(__dirname, 'Gdax'));
 const Process 	= require(path.join(__dirname, 'Process'));
@@ -26,8 +25,8 @@ db.sync()
 	this.gdax   = new Gdax(this.initialPriceList);
 	this.server.start(port);
 	this.gdax.ingestStream();
-	this.processBuffer  = new Process(this.gdax, this.gdax.processStream,  1000 * 10);
+	this.processBuffer  = new Process(this.gdax, this.gdax.processStream,  1000 * 30);
 	this.updateAccounts = new Process(this.gdax, this.gdax.updateAccounts, 1000 * 5 );
-	this.determine      = new Process(this.gdax, this.gdax.determine, 1000 * 2);
-	this.displayValidPrices = new Process(this.gdax, this.gdax.displayValidPrices, 1000 * 3);
+	this.determine      = new Process(this.gdax, this.gdax.determine, 1000 * 30);
+	this.displayValidPrices = new Process(this.gdax, this.gdax.displayValidPrices, 1000 * 20);
 });

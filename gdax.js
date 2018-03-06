@@ -10,8 +10,8 @@ const Decision 	= require(path.join(__dirname, 'Decision'));
 
 class Gdax {
 	constructor(initialPrices){
-		this.products = ['BCH-BTC','ETH-BTC','LTC-BTC','BTC-USD'];
-		this.socket = new gdax.WebsocketClient(this.products,config.websocketUrl,null,['full']);
+		this.products = ['BCH-BTC','ETH-BTC','LTC-BTC'];
+		this.socket = new gdax.WebsocketClient(this.products,config.websocketUrl,null,['match']);
 		this.client = new gdax.AuthenticatedClient(config.auth.apiKey, config.auth.apiSecret, config.auth.passphrase, config.baseUrl);
 		this.buffer = new Buffer();
 		this.messages = this.buffer.addCollection('message');
@@ -21,7 +21,7 @@ class Gdax {
 	};
 	ingestStream(){
 		this.socket.on('message', data =>{
-			if(data.type === 'done' && data.reason === 'filled' && data.product_id && data.price){
+			if(data.type === 'match' && data.product_id && data.price){
 				console.log(chalk.gray(JSON.stringify(data)));
 				this.buffer.addEventToCollection(data, this.messages);
 			};
@@ -34,13 +34,16 @@ class Gdax {
 		this.buffer.processBuffer(this.messages, this.valids);
 	};
 	determine(){
+		this.minTradeTime = 1000 * 60 * 20;
+		this.maxTradeTime = this.minTradeTime * 3;
+		this.goalMultiplier = 1.005;
+		this.lossMultiplier = .98;
 		Transaction.findOne({
 			order: [['id', 'DESC']],
 			limit: 1
 		}).then( transaction =>{
 			this.transaction = transaction;
 			if(!this.transaction){
-				console.log('no transaction.');
 				this.decision.evaluate().then( (e)=>{
 					if(e){
 						this.marketBuy(e);
@@ -48,9 +51,9 @@ class Gdax {
 				});
 			};
 			if(this.transaction){
-				console.log('transaction');
 				this.side = this.transaction.side;
-				this.product = this.transaction.product_id.split('-');
+				this.pair = this.transaction.product_id;
+				this.product = this.pair.split('-');
 				this.qouteCurrency = this.product[0];
 				this.baseCurrency  = this.product[1];
 				if(this.side === 'sell'){
@@ -59,7 +62,7 @@ class Gdax {
 					});
 				};
 				if(this.side === 'buy'){
-					Tickers.findOne({
+					Ticker.findOne({
 						where: {
 							product_id: this.transaction.product_id
 						},
@@ -67,24 +70,34 @@ class Gdax {
 						limit: 1
 					}).then( ticker =>{
 						this.ticker = ticker;
-						if(this.ticker.price > this.transaction.price){
+						if(this.ticker && this.transaction){
 							this.timeSince = Date.now() - this.transaction.time;
-							if(this.timeSince < 1000 * 60){
-								//less than min time only sell if over goal or big loss
-								if(this.ticker.price > this.transaction.price * 1.02){
-									this.marketSell(this.product, this.ticker.price);	
-								} 
-								if(this.ticker.price < this.transaction.price * .99){
-									this.marketSell(this.product, this.ticker.price);	
+							console.log(chalk.red(this.timeSince), Date.now(), this.transaction.time);
+							if(this.ticker.price > this.transaction.price){
+								console.log('#77');
+								if(this.ticker.price > this.transaction.price * this.goalMultiplier){
+									console.log(chalk.bgGreen('ticker greater - GOAL!'));
+									this.marketSell(this.pair, this.ticker.price);	
+								};
+								if(this.timeSince > this.maxTradeTime){
+									console.log(chalk.bgGreen('ticker greater - max time'));
+									this.marketSell(this.pair, this.ticker.price);
 								};
 							};
-							if(this.timeSince > 1000 * 60){
-								//over min time but less than max time
-								if( this.timeSince > this.minTime && this.timeSince < this.maxTime ){
-									//idk think of something	
+							if(this.ticker.price < this.transaction.price){
+								console.log('##>', this.timeSince, this.maxTradeTime);
+								console.log('#88');
+								if(this.ticker.price < this.transaction.price * this.lossMultiplier){
+									console.log(chalk.bgRed('ticker less - too low'));
+									this.marketSell(this.pair, this.ticker.price);	
 								};
-								if(this.timeSince > this.maxTime){
-									this.marketSell(this.product, this.ticker.price);
+								if(this.timeSince > this.maxTradeTime){
+									console.log(chalk.bgRed('ticker less - max time'));
+									this.marketSell(this.pair, this.ticker.price);
+								} else if (this.timeSince > this.minTradeTime){
+									//	
+								} else {
+									// 
 								}
 							};
 						};
@@ -95,19 +108,22 @@ class Gdax {
 	};
 	marketBuy(rec){
 		this.rec = rec;
+		console.log(chalk.magenta(JSON.stringify(this.rec)));
 		this.product = this.rec.highestGainProductId;
 		this.currencyNeeded = this.product.split('-')[1]; 
 		Account.findOne({where: {currency: this.currencyNeeded}})
 		.then( (account)=>{
 			this.account = account;
 			if(this.rec && this.account && this.account.available > .01){
+				this.tempSize = (this.account.available - (this.account.available * .003));
+				this.funds = this.roundDown(this.tempSize, 8);
 				this.orderParams = {
 					side: 'buy',
 					type: 'market',
-					size: this.account.available, 
+					funds: this.funds, 
 					product_id: this.product,
 				};
-				console.log(chalk.green(JSON.stringify(this.orderParams)));
+				console.log(chalk.magenta(JSON.stringify(this.orderParams)));
 				this.client.placeOrder(this.orderParams, (err, res, data)=>{
 					if (err){
 						console.log('err', err);
@@ -122,6 +138,7 @@ class Gdax {
 						});
 					};
 				});
+				
 			};
 		});
 	};
@@ -133,14 +150,14 @@ class Gdax {
 		Account.findOne({where: {currency: this.currencyNeeded}})
 		.then( (account)=>{
 			this.account = account;
-			if(this.rec && this.account && this.account.available > .01){
+			if(this.product && this.account && this.account.available > .01){
 				this.orderParams = {
 					side: 'sell',
 					type: 'market',
 					product_id: this.product,
 					size: this.account.available
 				}	
-				console.log(chalk.green(JSON.stringify(this.orderParams)));
+				console.log(chalk.magenta(JSON.stringify(this.orderParams)));
 				this.client.placeOrder(this.orderParams, (err, res, data)=>{
 					if (err){
 						console.log('err', err);
@@ -153,9 +170,9 @@ class Gdax {
 							side:  			data.side,
 							time:           Date.now()
 						});
-						console.log('hup!');
 					};
 				});
+				
 			};
 		});
 	}
@@ -167,11 +184,11 @@ class Gdax {
 				if(account.currency === 'USD'){
 					this.available = +account.available;
 					delete account['available'];
-					account.available = this.available.toFixed(2);
+					account.available = this.roundDown(this.available, 2); 
 				} else {
 					this.available = +account.available;
 					delete account['available'];
-					account.available = this.available.toFixed(8);
+					account.available = this.roundDown(this.available, 8)
 				}
 				Account.findOne({
 					where: {
@@ -197,8 +214,32 @@ class Gdax {
 	displayValidPrices(){
 		console.log('-----------');
 		this.valids.data.map( (e)=>{
-			console.log(chalk.cyan(JSON.stringify(e)));
+			console.log('Valid Prices:', chalk.cyan(JSON.stringify(e)));
+		});
+		Transaction.findAll({
+			order: [['id', 'DESC']],
+			limit: 1
+		}).then( transactions =>{
+			if(transactions && transactions.length > 0){
+				console.log('Transaction:', chalk.cyan(JSON.stringify(transactions)));
+			} else {
+				console.log('no transactions');
+			}
+		});
+		Ticker.findAll({
+			order: [['id', 'DESC']],
+			limit: 3
+		}).then( tickers =>{
+			if(tickers && tickers.length > 0){
+				//console.log('Tickers:', chalk.cyan(JSON.stringify(tickers)));
+			} else {
+				console.log('no tickers');
+			}
 		});	
+	};
+	roundDown(number, decimals) {
+		decimals = decimals || 0;
+		return ( Math.floor( number * Math.pow(10, decimals) ) / Math.pow(10, decimals) );
 	};
 };
 
