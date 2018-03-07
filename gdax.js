@@ -46,7 +46,7 @@ class Gdax {
 			if(!this.transaction){
 				this.decision.evaluate().then( (e)=>{
 					if(e){
-						this.marketBuy(e);
+						//this.marketBuy(e);
 					}	
 				});
 			};
@@ -58,7 +58,7 @@ class Gdax {
 				this.baseCurrency  = this.product[1];
 				if(this.side === 'sell'){
 					this.decision.evaluate().then( (e)=>{
-						this.marketBuy(e);	
+						//this.marketBuy(e);	
 					});
 				};
 				if(this.side === 'buy'){
@@ -77,11 +77,11 @@ class Gdax {
 								console.log('#77');
 								if(this.ticker.price > this.transaction.price * this.goalMultiplier){
 									console.log(chalk.bgGreen('ticker greater - GOAL!'));
-									this.marketSell(this.pair, this.ticker.price);	
+									//this.marketSell(this.pair, this.ticker.price);	
 								};
 								if(this.timeSince > this.maxTradeTime){
 									console.log(chalk.bgGreen('ticker greater - max time'));
-									this.marketSell(this.pair, this.ticker.price);
+									//this.marketSell(this.pair, this.ticker.price);
 								};
 							};
 							if(this.ticker.price < this.transaction.price){
@@ -89,11 +89,11 @@ class Gdax {
 								console.log('#88');
 								if(this.ticker.price < this.transaction.price * this.lossMultiplier){
 									console.log(chalk.bgRed('ticker less - too low'));
-									this.marketSell(this.pair, this.ticker.price);	
+									//this.marketSell(this.pair, this.ticker.price);	
 								};
 								if(this.timeSince > this.maxTradeTime){
 									console.log(chalk.bgRed('ticker less - max time'));
-									this.marketSell(this.pair, this.ticker.price);
+									//this.marketSell(this.pair, this.ticker.price);
 								} else if (this.timeSince > this.minTradeTime){
 									//	
 								} else {

@@ -4,6 +4,8 @@ const server 	= require('http').createServer();
 const db 	 	= require(path.join(__dirname, 'db')).db;
 const Gdax   	= require(path.join(__dirname, 'Gdax'));
 const Process 	= require(path.join(__dirname, 'Process'));
+const Strategy 	= require(path.join(__dirname, 'Strategy'));
+const Candle 	= require(path.join(__dirname, 'Candle'));
 const Valid 	= require(path.join(__dirname, 'Valid'));
 const port   	= process.env.PORT || 3037;
 

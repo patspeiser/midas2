@@ -1,5 +1,5 @@
 const chalk = require('chalk');
-console.log(chalk.magenta('process handler initialized'));
+console.log(chalk.yellow('##process handler##'));
 
 class Process{
 	constructor(context, fn, interval){

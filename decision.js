@@ -4,6 +4,7 @@ const moment = require('moment');
 const Op = require(path.join(__dirname, 'db')).Op;
 const Ticker = require(path.join(__dirname,'db')).models.Ticker;
 const Transaction = require(path.join(__dirname,'db')).models.Transaction;
+const T = require('tulind');
 
 class Decision {
 	constructor(){};
