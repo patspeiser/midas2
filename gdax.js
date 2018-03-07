@@ -6,6 +6,7 @@ const Account = require(path.join(__dirname,'db')).models.Account;
 const Ticker = require(path.join(__dirname,'db')).models.Ticker;
 const Transaction = require(path.join(__dirname,'db')).models.Transaction;
 const Buffer = require(path.join(__dirname, 'Buffer'));
+const Strategy = require(path.join(__dirname, 'Strategy'));
 const Decision 	= require(path.join(__dirname, 'Decision'));
 
 class Gdax {
@@ -18,6 +19,11 @@ class Gdax {
 		this.valids   = this.buffer.addCollection('valids');
 		this.buffer.addEventToCollection(initialPrices, this.valids);
 		this.decision  = new Decision();
+	};
+	createStrategy(){
+		this.strat = new Strategy('test');
+		console.log('STRATEGY', this.strat);
+		return this.strat; 
 	};
 	ingestStream(){
 		this.socket.on('message', data =>{
