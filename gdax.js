@@ -11,7 +11,7 @@ const Decision 	= require(path.join(__dirname, 'Decision'));
 
 class Gdax {
 	constructor(initialPrices){
-		this.products = ['BCH-BTC','ETH-BTC','LTC-BTC'];
+		this.products = ['BTC-USD','BCH-USD','ETH-USD','LTC-USD']
 		this.socket = new gdax.WebsocketClient(this.products,config.websocketUrl,null,['match']);
 		this.client = new gdax.AuthenticatedClient(config.auth.apiKey, config.auth.apiSecret, config.auth.passphrase, config.baseUrl);
 		this.buffer = new Buffer();
@@ -19,11 +19,6 @@ class Gdax {
 		this.valids   = this.buffer.addCollection('valids');
 		this.buffer.addEventToCollection(initialPrices, this.valids);
 		this.decision  = new Decision();
-	};
-	createStrategy(){
-		this.strat = new Strategy('test');
-		console.log('STRATEGY', this.strat);
-		return this.strat; 
 	};
 	ingestStream(){
 		this.socket.on('message', data =>{
@@ -40,6 +35,10 @@ class Gdax {
 		this.buffer.processBuffer(this.messages, this.valids);
 	};
 	determine(){
+		console.log('determine');
+		this.decision.evaluate().then( ()=>{
+			console.log('ranit');
+		});
 		this.minTradeTime = 1000 * 60 * 20;
 		this.maxTradeTime = this.minTradeTime * 3;
 		this.goalMultiplier = 1.005;

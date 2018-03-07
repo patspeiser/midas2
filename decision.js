@@ -4,6 +4,7 @@ const moment = require('moment');
 const Op = require(path.join(__dirname, 'db')).Op;
 const Ticker = require(path.join(__dirname,'db')).models.Ticker;
 const Transaction = require(path.join(__dirname,'db')).models.Transaction;
+const Strategy = require(path.join(__dirname, 'Strategy'));
 const T = require('tulind');
 
 class Decision {
@@ -11,7 +12,7 @@ class Decision {
 	evaluate(){
 		return new Promise( (resolve, reject)=>{
 			this.interval = {amount: 30, type: 'minutes'};
-			this.products = ['BCH-BTC','ETH-BTC','LTC-BTC'];	
+			this.products = ['BTC-USD','BCH-USD','ETH-USD','LTC-USD']	
 			return this.getProducts(this.interval, this.products)
 			.then( prods=>{
 				if(prods){
@@ -20,6 +21,7 @@ class Decision {
 						this.product = product.reverse();
 						if(this.product && this.product.length > 0){
 							this.info = this.getDataSetInfo(this.product);
+							this.newInfo = this.runStrats(this.product);
 							this.datasets.push(this.info);	
 						}
 					});
@@ -31,6 +33,15 @@ class Decision {
 				};
 			});
 		});
+	};
+	runStrats(sets){
+		this.strat = new Strategy('test');
+		this.sets = sets;
+		this.prices = this.sets.map( set=>{
+			if (set.price)
+				return set.price;
+		});
+		this.strat.sma(this.prices);
 	};
 	createRecommendation(rows){
 		this.rows = rows;
