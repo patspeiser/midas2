@@ -29,7 +29,6 @@ db.sync()
 	this.gdax.ingestStream();
 	this.processBuffer  = new Process(this.gdax, this.gdax.processStream,  1000 * 30);
 	this.updateAccounts = new Process(this.gdax, this.gdax.updateAccounts, 1000 * 5 );
-	this.determine      = new Process(this.gdax, this.gdax.determine, 1000 * 1);
-	//this.strat          = new Process(this.gdax, this.gdax.createStrategy, 1000 * 1);
+	this.determine      = new Process(this.gdax, this.gdax.determine, 1000 * 5);
 	this.displayValidPrices = new Process(this.gdax, this.gdax.displayValidPrices, 1000 * 20);
 });

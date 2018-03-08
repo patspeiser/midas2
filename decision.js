@@ -42,6 +42,7 @@ class Decision {
 				return set.price;
 		});
 		this.strat.sma(this.prices);
+		this.strat.bbands(this.prices);
 	};
 	createRecommendation(rows){
 		this.rows = rows;
