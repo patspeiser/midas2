@@ -61,16 +61,23 @@ class Decision {
 			open: this.opens,
 			close: this.closes
 		};
-		//this.strat.adx(this.sets, {period: 5});
-		//this.strat.atr(  this.sets, {period: 5});
-		//this.strat.bbands(this.sets, {period: 5, stdDev: 1});
-		//this.strat.cci(this.sets, {period: 5});
-		//this.strat.ema(this.sets, {period: 5});
-		//this.strat.macd(this.sets, {short: 1, long: 3, period: 5});
-		//this.strat.rsi(this.sets, {period: 5});
-		//this.strat.sma(this.sets, {period: 5});
-		//this.strat.stoch(this.sets, {kPeriod: 5, kSlowingPeriod: 3 , dPeriod: 3});
-		this.strat.ultosc(this.sets, {short: 2, medium: 3, long: 5});
+		this.strategies = [
+			this.strat.adx(this.sets, {period: 5}),
+			this.strat.atr(  this.sets, {period: 5}),
+			this.strat.bbands(this.sets, {period: 5, stdDev: 1}),
+			this.strat.cci(this.sets, {period: 5}),
+			this.strat.ema(this.sets, {period: 5}),
+			this.strat.macd(this.sets, {short: 1, long: 3, period: 5}),
+			this.strat.rsi(this.sets, {period: 5}),
+			this.strat.sma(this.sets, {period: 5}),
+			this.strat.stoch(this.sets, {kPeriod: 5, kSlowingPeriod: 3 , dPeriod: 3}),
+			this.strat.ultosc(this.sets, {short: 2, medium: 3, long: 5})
+		];
+		return Promise.all(this.strategies).then(function(data){
+			if(data)
+				//console.log(data);
+				return data;
+		});
 	};
 	createCandles(set, period){
 		this.set = set;
