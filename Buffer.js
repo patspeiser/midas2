@@ -42,7 +42,7 @@ class Buffer{
 							this.removeEventFromCollection(event, collection);
 						});
 					} else {
-						//console.log(chalk.red('shitty price'), event.product_id, event.price);
+						console.log(chalk.red('shitty price'), event.product_id, event.price);
 					}
 				}
 			});

@@ -41,8 +41,66 @@ class Decision {
 			if (set.price)
 				return set.price;
 		});
-		this.strat.sma(this.prices);
-		this.strat.bbands(this.prices);
+		this.candles = this.createCandles(this.prices, 10);
+		this.highs = [];
+		this.lows  = [];
+		this.opens = [];
+		this.closes= [];
+		this.candles.map( c=>{
+			if(c.open && c.close && c.high && c.low){
+				this.highs.push(c.high);
+				this.lows.push(c.low);
+				this.opens.push(c.open);
+				this.closes.push(c.close);
+			};
+		});
+		this.sets = {
+			allPrices: this.prices,
+			high: this.highs,
+			low : this.lows,
+			open: this.opens,
+			close: this.closes
+		};
+		//this.strat.adx(this.sets, {period: 5});
+		//this.strat.atr(  this.sets, {period: 5});
+		//this.strat.bbands(this.sets, {period: 5, stdDev: 1});
+		//this.strat.cci(this.sets, {period: 5});
+		//this.strat.ema(this.sets, {period: 5});
+		//this.strat.macd(this.sets, {short: 1, long: 3, period: 5});
+		//this.strat.rsi(this.sets, {period: 5});
+		//this.strat.sma(this.sets, {period: 5});
+		//this.strat.stoch(this.sets, {kPeriod: 5, kSlowingPeriod: 3 , dPeriod: 3});
+		this.strat.ultosc(this.sets, {short: 2, medium: 3, long: 5});
+	};
+	createCandles(set, period){
+		this.set = set;
+		this.period = period;
+		this.candles = [];
+		if(this.set.length > this.period){
+			for(let i = 0; i < this.set.length-this.period-1; i+=this.period){
+				this.candle = {
+					high: 0,
+					low : 0,
+					open: 0,
+					close:0
+				};	
+				for(let j = 0; j<this.period; j++){
+					this.price = set[i+j];
+					if(this.candle.low === 0)
+						this.candle.low = this.price;
+					if(this.price >= this.candle.high)
+						this.candle.high = this.price;
+					if(this.price <= this.candle.low)
+						this.candle.low  = this.price;
+					if(j === 0)
+						this.candle.open = this.price;
+					if(j === this.period-1)
+						this.candle.close = this.price;
+				};
+				this.candles.push(this.candle);
+			};
+			return this.candles;
+		};
 	};
 	createRecommendation(rows){
 		this.rows = rows;
@@ -89,19 +147,7 @@ class Decision {
 				return data;
 		});
 	};
-	lessenNoise(set, granularity){
-		if(set.length > granularity){
-			this.xSet = [];
-			for(let i = 0; i < set.length-granularity-1; i+=granularity){
-				this.set = [];
-				for(let j = 0; j<granularity; j++){
-					this.set.push(set[i+j]);
-				};
-				this.xSet.push(this.set);
-			};
-			return this.xSet;
-		};
-	};
+	
 	allValidFields(set){
 		this.valid = false;
 		this.values = Object.values(set);
