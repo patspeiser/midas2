@@ -180,7 +180,7 @@ class Gdax {
 				
 			};
 		});
-	}
+	};
 	updateAccounts(){
 		this.client.getAccounts().then( (accounts)=>{
 			accounts.forEach( (account)=>{
