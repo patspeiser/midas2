@@ -22,7 +22,8 @@ class Decision {
 						if(this.product && this.product.length > 0){
 							this.info = this.getDataSetInfo(this.product);
 							this.runStrats(this.product).then( data=>{
-								//console.log(data);
+								console.log(product[0].product_id);
+								console.log(data[0][0][0]);
 							});
 							this.datasets.push(this.info);	
 						}
@@ -37,7 +38,7 @@ class Decision {
 		});
 	};
 	runStrats(sets){
-		this.strat = new Strategy('test');
+		this.strat = new Strategy('gdax');
 		this.sets = sets;
 		this.prices = this.sets.map( set=>{
 			if (set.price)

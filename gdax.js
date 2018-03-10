@@ -11,6 +11,7 @@ const Decision 	= require(path.join(__dirname, 'Decision'));
 
 class Gdax {
 	constructor(initialPrices){
+		console.log(chalk.yellow('##new gdax instance##'));
 		this.products = ['BTC-USD','BCH-USD','ETH-USD','LTC-USD']
 		this.socket = new gdax.WebsocketClient(this.products,config.websocketUrl,null,['match']);
 		this.client = new gdax.AuthenticatedClient(config.auth.apiKey, config.auth.apiSecret, config.auth.passphrase, config.baseUrl);
@@ -79,7 +80,6 @@ class Gdax {
 							this.timeSince = Date.now() - this.transaction.time;
 							console.log(chalk.red(this.timeSince), Date.now(), this.transaction.time);
 							if(this.ticker.price > this.transaction.price){
-								console.log('#77');
 								if(this.ticker.price > this.transaction.price * this.goalMultiplier){
 									console.log(chalk.bgGreen('ticker greater - GOAL!'));
 									//this.marketSell(this.pair, this.ticker.price);	
@@ -90,8 +90,6 @@ class Gdax {
 								};
 							};
 							if(this.ticker.price < this.transaction.price){
-								console.log('##>', this.timeSince, this.maxTradeTime);
-								console.log('#88');
 								if(this.ticker.price < this.transaction.price * this.lossMultiplier){
 									console.log(chalk.bgRed('ticker less - too low'));
 									//this.marketSell(this.pair, this.ticker.price);	

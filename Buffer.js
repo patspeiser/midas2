@@ -7,6 +7,7 @@ const Ticker = Models.Ticker;
 
 class Buffer{
 	constructor(){
+		console.log(chalk.yellow('##new buffer instance##'));
 		this.buffer = new loki('midas2.json');
 	};
 	addCollection(name){
