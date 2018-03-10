@@ -14,30 +14,37 @@ class Server{
 		this.server = server;
 	};
 	init(){
-		this.connectDb().then( db =>{
-			this.db = db;
-			this.startServer(port).then( server=>{
-				this.server = server;
-				this.startServices();
+		return new Promise( (resolve, reject)=>{
+			this.connectDb().then( db =>{
+				this.db = db;
+				this.startServer(port).then( server=>{
+					this.server = server;
+					this.services = this.startServices();
+					resolve({
+						db: this.db,
+						server: this.server,
+						services: this.services
+					});
+					reject('errinit');
+				});
 			});
-		});
+		})
 	};
 	connectDb(){
 		return new Promise( (resolve, reject)=>{
 			db.sync().then( db =>{
 				resolve(db);
-				reject('errdb');
+				reject('errconnectDb');
 			});
 		});
 	};
 	startServer(port){
 		return new Promise( (resolve, reject)=>{
 			this.listen = this.server.listen(port, ()=>{
-				console.log('on port', port);
-				console.log('starting services');
-				
+				console.log(chalk.cyan('...servers up', port));
 			});
 			resolve(this.listen);
+			reject('errstartServer');
 		});
 	};
 	startServices(){
