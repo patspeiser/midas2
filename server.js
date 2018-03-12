@@ -1,13 +1,16 @@
 const path   	= require('path');
 const chalk  	= require('chalk');
-const server 	= require('http').createServer();
-const db 	 	= require(path.join(__dirname, 'db')).db;
+const fs        = require('fs');
+const App 	    = require(path.join(__dirname, 'App'));
+const app       = new App();
+const server 	= require('http').createServer(app.app);
+const db 	 	= require(path.join(__dirname, 'Db')).db;
 const Gdax   	= require(path.join(__dirname, 'Gdax'));
 const Process 	= require(path.join(__dirname, 'Process'));
 const Strategy 	= require(path.join(__dirname, 'Strategy'));
-const Candle 	= require(path.join(__dirname, 'Candle'));
 const Valid 	= require(path.join(__dirname, 'Valid'));
 const port   	= process.env.PORT || 3037;
+const io        = require('socket.io')(server);
 
 class Server{
 	constructor(server){
@@ -48,6 +51,10 @@ class Server{
 		});
 	};
 	startServices(){
+		app.setRoutes();
+		io.on('connection', (socket)=>{
+			console.log('connection');
+		});
 		this.initialPriceList 	= new Valid();
 		this.gdax 				= new Gdax(this.initialPriceList);
 		this.gdax.ingestStream();
@@ -58,4 +65,5 @@ class Server{
 	};
 };
 
+module.exports = Server;
 this.server = new Server(server).init();

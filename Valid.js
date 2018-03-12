@@ -1,9 +1,9 @@
 class Valid{
 	constructor(){
 		return {
-			'BTC-USD': 8801,
+			'BTC-USD': 8808,
 			'BCH-USD': 1000,
-			'ETH-USD': 688,
+			'ETH-USD': 696,
 			'LTC-USD': 178,
 		};	
 	};

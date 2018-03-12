@@ -38,33 +38,34 @@ class Decision {
 		});
 	};
 	runStrats(sets){
-		this.strat = new Strategy('gdax');
-		this.sets = sets;
-		this.prices = this.sets.map( set=>{
-			if (set.price)
-				return set.price;
-		});
-		this.candles = this.createCandles(this.prices, 10);
-		this.highs = [];
-		this.lows  = [];
-		this.opens = [];
-		this.closes= [];
-		this.candles.map( c=>{
-			if(c.open && c.close && c.high && c.low){
-				this.highs.push(c.high);
-				this.lows.push(c.low);
-				this.opens.push(c.open);
-				this.closes.push(c.close);
+		if(sets){
+			this.strat = new Strategy('gdax');
+			this.sets = sets;
+			this.prices = this.sets.map( set=>{
+				if (set.price)
+					return set.price;
+			});
+			this.candles = this.createCandles(this.prices, 10);
+			this.highs = [];
+			this.lows  = [];
+			this.opens = [];
+			this.closes= [];
+			this.candles.map( c=>{
+				if(c.open && c.close && c.high && c.low){
+					this.highs.push(c.high);
+					this.lows.push(c.low);
+					this.opens.push(c.open);
+					this.closes.push(c.close);
+				};
+			});
+			this.sets = {
+				allPrices: this.prices,
+				high: this.highs,
+				low : this.lows,
+				open: this.opens,
+				close: this.closes
 			};
-		});
-		this.sets = {
-			allPrices: this.prices,
-			high: this.highs,
-			low : this.lows,
-			open: this.opens,
-			close: this.closes
-		};
-		this.strategies = [
+			this.strategies = [
 			this.strat.adx(		this.sets, {period: 5}),
 			this.strat.atr(		this.sets, {period: 5}),
 			this.strat.bbands(	this.sets, {period: 5, stdDev: 1}),
@@ -75,11 +76,12 @@ class Decision {
 			this.strat.sma(		this.sets, {period: 5}),
 			this.strat.stoch(	this.sets, {kPeriod: 5, kSlowingPeriod: 3 , dPeriod: 3}),
 			this.strat.ultosc(	this.sets, {short: 2, medium: 3, long: 5})
-		];
-		return Promise.all(this.strategies).then(function(data){
-			if(data)
-				return data;
-		});
+			];
+			return Promise.all(this.strategies).then(function(data){
+				if(data)
+					return data;
+			});
+		}
 	};
 	createCandles(set, period){
 		this.set = set;
