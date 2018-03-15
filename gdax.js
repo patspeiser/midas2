@@ -18,13 +18,14 @@ class Gdax {
 		this.buffer = new Buffer();
 		this.messages = this.buffer.addCollection('message');
 		this.valids   = this.buffer.addCollection('valids');
+		this.strats   = this.buffer.addCollection('strategies');
 		this.buffer.addEventToCollection(initialPrices, this.valids);
 		this.decision  = new Decision();
 	};
 	ingestStream(){
 		this.socket.on('message', data =>{
 			if(data.type === 'match' && data.product_id && data.price){
-				console.log(chalk.gray(JSON.stringify(data)));
+				//console.log(chalk.gray(JSON.stringify(data)));
 				this.buffer.addEventToCollection(data, this.messages);
 			};
 		});
@@ -37,7 +38,7 @@ class Gdax {
 	};
 	determine(){
 		console.log('determine');
-		this.decision.evaluate().then( ()=>{
+		this.decision.evaluate(this.strats).then( ()=>{
 			console.log('ranit');
 		});
 		this.minTradeTime = 1000 * 60 * 20;
@@ -50,7 +51,7 @@ class Gdax {
 		}).then( transaction =>{
 			this.transaction = transaction;
 			if(!this.transaction){
-				this.decision.evaluate().then( (e)=>{
+				this.decision.evaluate(this.strats).then( (e)=>{
 					if(e){
 						//this.marketBuy(e);
 					}	
@@ -63,7 +64,7 @@ class Gdax {
 				this.qouteCurrency = this.product[0];
 				this.baseCurrency  = this.product[1];
 				if(this.side === 'sell'){
-					this.decision.evaluate().then( (e)=>{
+					this.decision.evaluate(this.strats).then( (e)=>{
 						//this.marketBuy(e);	
 					});
 				};
@@ -219,6 +220,8 @@ class Gdax {
 		this.valids.data.map( (e)=>{
 			console.log('Valid Prices:', chalk.cyan(JSON.stringify(e)));
 		});
+		this._strats = this.buffer.getAllEventsInCollection(this.strats);
+		console.log(chalk.green(JSON.stringify(this._strats)));
 		Transaction.findAll({
 			order: [['id', 'DESC']],
 			limit: 1
@@ -237,7 +240,7 @@ class Gdax {
 				//console.log('Tickers:', chalk.cyan(JSON.stringify(tickers)));
 			} else {
 				console.log('no tickers');
-			}
+			};
 		});	
 	};
 	roundDown(number, decimals) {

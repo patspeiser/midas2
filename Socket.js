@@ -7,13 +7,13 @@ class Socket {
 	};
 	init(){
 		this.io = io(this.server);			
+		this.listen(this.io);
 	};
 	listen(io){
 		this.io = io;
-		return new Promise( (resolve, reject)=>{
-			this.io.on('connection', socket=>{
-				resolve(socket);
-			});
+		this.io.on('connection', socket=>{
+			console.log(chalk.green('connection'));
+			//sockets	
 		});
 	};
 };

@@ -44,8 +44,8 @@ class Buffer{
 						});
 					} else {
 						console.log(chalk.red('shitty price'), event.product_id, event.price);
-					}
-				}
+					};
+				};
 			});
 		});
 	};

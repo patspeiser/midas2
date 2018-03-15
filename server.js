@@ -9,8 +9,8 @@ const Gdax   	= require(path.join(__dirname, 'Gdax'));
 const Process 	= require(path.join(__dirname, 'Process'));
 const Strategy 	= require(path.join(__dirname, 'Strategy'));
 const Valid 	= require(path.join(__dirname, 'Valid'));
+const io 		= require(path.join(__dirname, 'Socket'));
 const port   	= process.env.PORT || 3037;
-const io        = require('socket.io')(server);
 
 class Server{
 	constructor(server){
@@ -22,7 +22,7 @@ class Server{
 				this.db = db;
 				this.startServer(port).then( server=>{
 					this.server = server;
-					this.services = this.startServices();
+					this.services = this.startServices(this.server);
 					resolve({
 						db: this.db,
 						server: this.server,
@@ -42,19 +42,19 @@ class Server{
 		});
 	};
 	startServer(port){
+		this.port = port; 
 		return new Promise( (resolve, reject)=>{
-			this.listen = this.server.listen(port, ()=>{
-				console.log(chalk.cyan('...servers up', port));
+			this.listen = this.server.listen(this.port, ()=>{
+				console.log(chalk.cyan('...servers up', this.port));
 			});
 			resolve(this.listen);
 			reject('errstartServer');
 		});
 	};
-	startServices(){
-		app.setRoutes();
-		io.on('connection', (socket)=>{
-			console.log('connection');
-		});
+	startServices(server){
+		this.server 			= server; 
+		this.io                 = new io(this.server).init();
+		this.routes             = app.setRoutes();
 		this.initialPriceList 	= new Valid();
 		this.gdax 				= new Gdax(this.initialPriceList);
 		this.gdax.ingestStream();

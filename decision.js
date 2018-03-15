@@ -9,7 +9,8 @@ const T = require('tulind');
 
 class Decision {
 	constructor(){};
-	evaluate(){
+	evaluate(buffer){
+		this.buffer = buffer;
 		return new Promise( (resolve, reject)=>{
 			this.interval = {amount: 30, type: 'minutes'};
 			this.products = ['BTC-USD','BCH-USD','ETH-USD','LTC-USD']	
@@ -22,8 +23,7 @@ class Decision {
 						if(this.product && this.product.length > 0){
 							this.info = this.getDataSetInfo(this.product);
 							this.runStrats(this.product).then( data=>{
-								console.log(product[0].product_id);
-								console.log(data[0][0][0]);
+								this.buffer.insert(data);
 							});
 							this.datasets.push(this.info);	
 						}
@@ -39,6 +39,7 @@ class Decision {
 	};
 	runStrats(sets){
 		if(sets){
+			this.product_id = sets[0].product_id;
 			this.strat = new Strategy('gdax');
 			this.sets = sets;
 			this.prices = this.sets.map( set=>{
@@ -58,7 +59,7 @@ class Decision {
 					this.closes.push(c.close);
 				};
 			});
-			this.sets = {
+			this.priceSets = {
 				allPrices: this.prices,
 				high: this.highs,
 				low : this.lows,
@@ -66,20 +67,24 @@ class Decision {
 				close: this.closes
 			};
 			this.strategies = [
-			this.strat.adx(		this.sets, {period: 5}),
-			this.strat.atr(		this.sets, {period: 5}),
-			this.strat.bbands(	this.sets, {period: 5, stdDev: 1}),
-			this.strat.cci(		this.sets, {period: 5}),
-			this.strat.ema(		this.sets, {period: 5}),
-			this.strat.macd(	this.sets, {short: 1, long: 3, period: 5}),
-			this.strat.rsi(		this.sets, {period: 5}),
-			this.strat.sma(		this.sets, {period: 5}),
-			this.strat.stoch(	this.sets, {kPeriod: 5, kSlowingPeriod: 3 , dPeriod: 3}),
-			this.strat.ultosc(	this.sets, {short: 2, medium: 3, long: 5})
+				this.strat.adx(		this.priceSets, {period: 5}),
+				this.strat.atr(		this.priceSets, {period: 5}),
+				this.strat.bbands(	this.priceSets, {period: 5, stdDev: 1}),
+				this.strat.cci(		this.priceSets, {period: 5}),
+				this.strat.ema(		this.priceSets, {period: 5}),
+				this.strat.macd(	this.priceSets, {short: 1, long: 3, period: 5}),
+				this.strat.rsi(		this.priceSets, {period: 5}),
+				this.strat.sma(		this.priceSets, {period: 5}),
+				this.strat.stoch(	this.priceSets, {kPeriod: 5, kSlowingPeriod: 3 , dPeriod: 3}),
+				this.strat.ultosc(	this.priceSets, {short: 2, medium: 3, long: 5})
 			];
+			var that = this;
 			return Promise.all(this.strategies).then(function(data){
 				if(data)
-					return data;
+					return {
+						product_id: that.product_id,
+						data: data
+					};
 			});
 		}
 	};
