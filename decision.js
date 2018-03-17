@@ -11,24 +11,24 @@ class Decision {
 	constructor(){};
 	evaluate(buffer){
 		this.buffer = buffer;
+		this.buffer.chain().remove();
 		return new Promise( (resolve, reject)=>{
 			this.interval = {amount: 30, type: 'minutes'};
 			this.products = ['BTC-USD','BCH-USD','ETH-USD','LTC-USD']	
 			return this.getProducts(this.interval, this.products)
 			.then( prods=>{
 				if(prods){
-					this.datasets = [];
+					console.log(prods.length);
 					prods.forEach(product=>{
 						this.product = product.reverse();
 						if(this.product && this.product.length > 0){
-							this.info = this.getDataSetInfo(this.product);
 							this.runStrats(this.product).then( data=>{
-								this.buffer.insert(data);
+								this.data = data;
+								this.data.product_id = product[0].product_id;
+								this.buffer.insert(this.data);
 							});
-							this.datasets.push(this.info);	
 						}
 					});
-					this.rec = this.createRecommendation(this.datasets);
 					if(this.rec){
 						resolve(this.rec);
 						reject();
@@ -66,24 +66,28 @@ class Decision {
 				open: this.opens,
 				close: this.closes
 			};
-			this.strategies = [
-				this.strat.adx(		this.priceSets, {period: 5}),
-				this.strat.atr(		this.priceSets, {period: 5}),
-				this.strat.bbands(	this.priceSets, {period: 5, stdDev: 1}),
-				this.strat.cci(		this.priceSets, {period: 5}),
-				this.strat.ema(		this.priceSets, {period: 5}),
-				this.strat.macd(	this.priceSets, {short: 1, long: 3, period: 5}),
-				this.strat.rsi(		this.priceSets, {period: 5}),
-				this.strat.sma(		this.priceSets, {period: 5}),
-				this.strat.stoch(	this.priceSets, {kPeriod: 5, kSlowingPeriod: 3 , dPeriod: 3}),
-				this.strat.ultosc(	this.priceSets, {short: 2, medium: 3, long: 5})
-			];
+			this.strategies = {
+				adx: 	this.strat.adx(		this.priceSets, {period: 5}),
+				atr: 	this.strat.atr(		this.priceSets, {period: 5}),
+				bbands: this.strat.bbands(	this.priceSets, {period: 5, stdDev: 1}),
+				cci: 	this.strat.cci(		this.priceSets, {period: 5}),
+				ema: 	this.strat.ema(		this.priceSets, {period: 5}),
+				macd: 	this.strat.macd(	this.priceSets, {short: 1, long: 3, period: 5}),
+				rsi: 	this.strat.rsi(		this.priceSets, {period: 5}),
+				sma:    this.strat.sma(		this.priceSets, {period: 5}),
+				stoch: 	this.strat.stoch(	this.priceSets, {kPeriod: 5, kSlowingPeriod: 3 , dPeriod: 3}),
+				ultosc: this.strat.ultosc(	this.priceSets, {short: 2, medium: 3, long: 5})
+			};
+			
+			this.keys = Object.keys(this.strategies);
+			this.values = Object.values(this.strategies);
 			var that = this;
-			return Promise.all(this.strategies).then(function(data){
+			return Promise.all(this.values).then(function(data){
 				if(data)
 					return {
-						product_id: that.product_id,
-						data: data
+						sets     	: sets, 
+						strategies 	: that.keys, 
+						data       	: data
 					};
 			});
 		}
@@ -160,6 +164,9 @@ class Decision {
 		};
 		return Promise.all(this.promises).then(function(data){
 			if(data)
+				data[1].map(d =>{
+					//console.log(chalk.magenta(d.product_id));
+				});
 				return data;
 		});
 	};

@@ -24,12 +24,12 @@ class Gdax {
 		this.processBuffer  	= new Process(this, this.processStream,  1000 * 3);
 		this.updateAccounts		= new Process(this, this.updateAccounts, 1000 * 5 );
 		this.determine     		= new Process(this, this.determine, 1000 * 5);
-		this.displayValidPrices = new Process(this, this.infolog, 1000 * 20);
+		this.displayValidPrices = new Process(this, this.infolog, 1000 * 1 );
 	};
 	ingestStream(){
 		this.socket.on('message', data =>{
 			if(data.type === 'match' && data.product_id && data.price){
-				console.log(chalk.gray(JSON.stringify(data)));
+				//console.log(chalk.gray(JSON.stringify(data)));
 				this.buffers.messages.insert(data);	
 			};
 		});
@@ -218,18 +218,19 @@ class Gdax {
 		});
 	};
 	infolog(){
-		console.log('-----------');
+		//console.log('-----------');
 		//this.buffers.valids.data.map( (e)=>{
 		//	console.log('Valid Prices:', chalk.cyan(JSON.stringify(e)));
 		//});
-		//this._strats = this.buffer.getAllEventsInCollection(this.strats);
-		//console.log(chalk.green(JSON.stringify(this._strats.length)));
+		//console.log(this.buffers.strats);
+		this._strats = this.buffers.strats.data;
+		console.log(chalk.green(JSON.stringify(this._strats.length)));
 		Transaction.findAll({
 			order: [['id', 'DESC']],
 			limit: 1
 		}).then( transactions =>{
 			if(transactions && transactions.length > 0){
-				console.log('Transaction:', chalk.cyan(JSON.stringify(transactions)));
+				//console.log('Transaction:', chalk.cyan(JSON.stringify(transactions)));
 			} else {
 				console.log('no transactions');
 			}

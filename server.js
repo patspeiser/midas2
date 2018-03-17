@@ -52,6 +52,9 @@ class Server{
 		});
 	};
 	startServices(server){
+		//now the servers up
+		//init memory buckets here then
+		//init additional services (socket server, gdax, etc);
 		this.server 			= server;
 		this.buffer = new Buffer().init().then( (buffers)=>{
 			this.buffers = buffers; 

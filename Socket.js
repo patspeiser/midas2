@@ -19,7 +19,7 @@ class Socket {
 			console.log(chalk.green('connection'));
 			setInterval( (socket)=>{
 				this.strats = this.buffers.strats.chain().data();	
-				this.io.emit('refreshStrategies', {strats: this.strats});
+				this.io.emit('refreshStrategies', { strategies: this.strats});
 			}, 1000);
 		});
 	};
