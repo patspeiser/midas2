@@ -13,8 +13,8 @@ class Buffer{
 	};
 	init(){
 		this.messages = 	this.buffer.addCollection('message');
-		this.valids  = this.buffer.addCollection('valids');
-		this.strats   = this.buffer.addCollection('strategies');
+		this.valids  = 		this.buffer.addCollection('valids');
+		this.strats   =		this.buffer.addCollection('strategies');
 		this.initialPriceList 	= new Valid();
 		this.valids.insert(this.initialPriceList);
 		return new Promise( (resolve, reject)=>{
@@ -43,22 +43,24 @@ class Buffer{
 	findOrCreateValidPrices(prices){
 		this.prices = prices;
 	};
-	processBuffer(collection, valids){
-		console.log(chalk.magenta(JSON.stringify(collection)));
-		if(collection && valids){
+	processBuffer(buffers){
+		this.buffers = buffers;
+		this.collection = this.buffers.messages;
+		this.valids     = this.buffers.valids
+		if(this.collection && this.valids){
 			this.upperBound = 1.02;
 			this.lowerBound = .98;
-			this.events = collection.chain().data();
-			this.valids = valids.chain().data();
+			this.events = this.collection.chain().data();
+			this.validPrices = this.valids.chain().data();
 			this.events.forEach( event =>{
-				this.valids.map( (v)=>{
+				this.validPrices.map( (v)=>{
 					this.validPrice = v[event.product_id];
 					if(event && event.product_id && v && this.validPrice){
 						if(event.price < this.validPrice * this.upperBound && event.price > this.validPrice * this.lowerBound){
 							v[event.product_id] = event.price;
-							valids.update(v);
+							this.valids.update(v);
 							Ticker.create(event).then( (e)=>{
-								collection.remove(event);	
+								this.collection.remove(event);	
 							});
 						} else {
 							console.log(chalk.red('shitty price'), event.product_id, event.price);

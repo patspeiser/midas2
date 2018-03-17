@@ -9,7 +9,6 @@ class App {
 	setRoutes(){
 		this.app.use(express.static('node_modules'));
 		this.app.get('/', (err, res, next)=>{
-			console.log('here');
 			res.sendFile('index.html', {root: './'});
 		});
 	};

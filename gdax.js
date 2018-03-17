@@ -38,10 +38,10 @@ class Gdax {
 		});
 	};
 	processStream(){
-		this.buffers.processBuffer(this.buffers.messages, this.buffers.valids);
+		this.buffers.processBuffer(this.buffers);
 	};
 	determine(){
-		this.decision.evaluate(this.strats).then( ()=>{
+		this.decision.evaluate(this.buffers.strats).then( ()=>{
 		});
 		this.minTradeTime = 1000 * 60 * 20;
 		this.maxTradeTime = this.minTradeTime * 3;
@@ -53,7 +53,7 @@ class Gdax {
 		}).then( transaction =>{
 			this.transaction = transaction;
 			if(!this.transaction){
-				this.decision.evaluate(this.strats).then( (e)=>{
+				this.decision.evaluate(this.buffers.strats).then( (e)=>{
 					if(e){
 						//this.marketBuy(e);
 					}	
@@ -66,7 +66,7 @@ class Gdax {
 				this.qouteCurrency = this.product[0];
 				this.baseCurrency  = this.product[1];
 				if(this.side === 'sell'){
-					this.decision.evaluate(this.strats).then( (e)=>{
+					this.decision.evaluate(this.buffers.strats).then( (e)=>{
 						//this.marketBuy(e);	
 					});
 				};

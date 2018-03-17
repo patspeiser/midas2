@@ -18,8 +18,8 @@ class Socket {
 		this.io.on('connection', socket=>{
 			console.log(chalk.green('connection'));
 			setInterval( (socket)=>{
-				console.log(this.buffers.strats.chain().data());	
-				//this.io.emit('refreshStrategies', {data: this.events});
+				this.strats = this.buffers.strats.chain().data();	
+				this.io.emit('refreshStrategies', {strats: this.strats});
 			}, 1000);
 		});
 	};
