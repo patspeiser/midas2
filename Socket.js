@@ -1,9 +1,13 @@
 const chalk = require('chalk');
 const io = require('socket.io');
+const path = require('path');
+const Process 	= require(path.join(__dirname, 'Process'));
+
 class Socket {
-	constructor(server){
-		console.log('##socket server##');
+	constructor(server, buffers){
+		console.log(chalk.cyan('##socket server##'));
 		this.server = server;
+		this.buffers = buffers;
 	};
 	init(){
 		this.io = io(this.server);			
@@ -13,7 +17,10 @@ class Socket {
 		this.io = io;
 		this.io.on('connection', socket=>{
 			console.log(chalk.green('connection'));
-			//sockets	
+			setInterval( (socket)=>{
+				console.log(this.buffers.strats.chain().data());	
+				//this.io.emit('refreshStrategies', {data: this.events});
+			}, 1000);
 		});
 	};
 };

@@ -8,25 +8,29 @@ const Transaction = require(path.join(__dirname,'db')).models.Transaction;
 const Buffer = require(path.join(__dirname, 'Buffer'));
 const Strategy = require(path.join(__dirname, 'Strategy'));
 const Decision 	= require(path.join(__dirname, 'Decision'));
+const Process   =  require(path.join(__dirname, 'Process'));
 
 class Gdax {
-	constructor(initialPrices){
+	constructor(buffers){
+		this.buffers = buffers;
 		console.log(chalk.yellow('##new gdax instance##'));
 		this.products = ['BTC-USD','BCH-USD','ETH-USD','LTC-USD']
 		this.socket = new gdax.WebsocketClient(this.products,config.websocketUrl,null,['match']);
 		this.client = new gdax.AuthenticatedClient(config.auth.apiKey, config.auth.apiSecret, config.auth.passphrase, config.baseUrl);
-		this.buffer = new Buffer();
-		this.messages = this.buffer.addCollection('message');
-		this.valids   = this.buffer.addCollection('valids');
-		this.strats   = this.buffer.addCollection('strategies');
-		this.buffer.addEventToCollection(initialPrices, this.valids);
 		this.decision  = new Decision();
+	};
+	init(){
+		this.ingestStream();
+		this.processBuffer  	= new Process(this, this.processStream,  1000 * 3);
+		this.updateAccounts		= new Process(this, this.updateAccounts, 1000 * 5 );
+		this.determine     		= new Process(this, this.determine, 1000 * 5);
+		this.displayValidPrices = new Process(this, this.infolog, 1000 * 20);
 	};
 	ingestStream(){
 		this.socket.on('message', data =>{
 			if(data.type === 'match' && data.product_id && data.price){
-				//console.log(chalk.gray(JSON.stringify(data)));
-				this.buffer.addEventToCollection(data, this.messages);
+				console.log(chalk.gray(JSON.stringify(data)));
+				this.buffers.messages.insert(data);	
 			};
 		});
 		this.socket.on('error', err =>{
@@ -34,12 +38,10 @@ class Gdax {
 		});
 	};
 	processStream(){
-		this.buffer.processBuffer(this.messages, this.valids);
+		this.buffers.processBuffer(this.buffers.messages, this.buffers.valids);
 	};
 	determine(){
-		console.log('determine');
 		this.decision.evaluate(this.strats).then( ()=>{
-			console.log('ranit');
 		});
 		this.minTradeTime = 1000 * 60 * 20;
 		this.maxTradeTime = this.minTradeTime * 3;
@@ -215,13 +217,13 @@ class Gdax {
 			});
 		});
 	};
-	displayValidPrices(){
+	infolog(){
 		console.log('-----------');
-		this.valids.data.map( (e)=>{
-			console.log('Valid Prices:', chalk.cyan(JSON.stringify(e)));
-		});
-		this._strats = this.buffer.getAllEventsInCollection(this.strats);
-		console.log(chalk.green(JSON.stringify(this._strats)));
+		//this.buffers.valids.data.map( (e)=>{
+		//	console.log('Valid Prices:', chalk.cyan(JSON.stringify(e)));
+		//});
+		//this._strats = this.buffer.getAllEventsInCollection(this.strats);
+		//console.log(chalk.green(JSON.stringify(this._strats.length)));
 		Transaction.findAll({
 			order: [['id', 'DESC']],
 			limit: 1

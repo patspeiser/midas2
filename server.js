@@ -8,8 +8,8 @@ const db 	 	= require(path.join(__dirname, 'Db')).db;
 const Gdax   	= require(path.join(__dirname, 'Gdax'));
 const Process 	= require(path.join(__dirname, 'Process'));
 const Strategy 	= require(path.join(__dirname, 'Strategy'));
-const Valid 	= require(path.join(__dirname, 'Valid'));
 const io 		= require(path.join(__dirname, 'Socket'));
+const Buffer = require(path.join(__dirname, 'Buffer'));
 const port   	= process.env.PORT || 3037;
 
 class Server{
@@ -45,23 +45,20 @@ class Server{
 		this.port = port; 
 		return new Promise( (resolve, reject)=>{
 			this.listen = this.server.listen(this.port, ()=>{
-				console.log(chalk.cyan('...servers up', this.port));
+				console.log(chalk.cyan('##http server##', this.port));
 			});
 			resolve(this.listen);
 			reject('errstartServer');
 		});
 	};
 	startServices(server){
-		this.server 			= server; 
-		this.io                 = new io(this.server).init();
-		this.routes             = app.setRoutes();
-		this.initialPriceList 	= new Valid();
-		this.gdax 				= new Gdax(this.initialPriceList);
-		this.gdax.ingestStream();
-		this.processBuffer  	= new Process(this.gdax, this.gdax.processStream,  1000 * 30);
-		this.updateAccounts		= new Process(this.gdax, this.gdax.updateAccounts, 1000 * 5 );
-		this.determine     		= new Process(this.gdax, this.gdax.determine, 1000 * 5);
-		this.displayValidPrices = new Process(this.gdax, this.gdax.displayValidPrices, 1000 * 20);
+		this.server 			= server;
+		this.buffer = new Buffer().init().then( (buffers)=>{
+			this.buffers = buffers; 
+			this.io   = new io(this.server, this.buffers).init();
+			this.gdax = new Gdax(this.buffers).init();
+			this.routes = app.setRoutes();
+		});
 	};
 };
 
