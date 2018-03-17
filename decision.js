@@ -85,7 +85,7 @@ class Decision {
 			return Promise.all(this.values).then(function(data){
 				if(data)
 					return {
-						sets     	: sets, 
+						sets     	: that.priceSets, 
 						strategies 	: that.keys, 
 						data       	: data
 					};
