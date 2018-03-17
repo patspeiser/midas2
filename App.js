@@ -8,6 +8,7 @@ class App {
 	};
 	setRoutes(){
 		this.app.use(express.static('node_modules'));
+		this.app.use(express.static('scripts'));
 		this.app.get('/', (err, res, next)=>{
 			res.sendFile('index.html', {root: './'});
 		});

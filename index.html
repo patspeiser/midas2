@@ -1,17 +1,14 @@
 <html>
-	<head>
-		<script src='/socket.io/socket.io.js'></script>
-		<script src="/chart.js/dist/Chart.js"></script>
-		<script> var socket = io(); 
-			socket.on('refreshStrategies', (payload)=>{
-				console.log('do', Date.now(), payload.strategies);
-			});
-		</script>
+<head>
+	<script src='/socket.io/socket.io.js'></script>
+	<script src="/chart.js/dist/Chart.js"></script>
+	<script src="/scripts.js" defer></script>
+</script>
 	</head>
 	<body>
 		<div id='main'>
 			<p>main</p>
-			<canvas id="chart" width="400" height="400"></canvas>
+			<canvas id="chart"></canvas>
 		</div>
 	</body>
 </html>

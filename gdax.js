@@ -41,8 +41,6 @@ class Gdax {
 		this.buffers.processBuffer(this.buffers);
 	};
 	determine(){
-		this.decision.evaluate(this.buffers.strats).then( ()=>{
-		});
 		this.minTradeTime = 1000 * 60 * 20;
 		this.maxTradeTime = this.minTradeTime * 3;
 		this.goalMultiplier = 1.005;
@@ -218,19 +216,17 @@ class Gdax {
 		});
 	};
 	infolog(){
-		//console.log('-----------');
-		//this.buffers.valids.data.map( (e)=>{
-		//	console.log('Valid Prices:', chalk.cyan(JSON.stringify(e)));
-		//});
-		//console.log(this.buffers.strats);
+		this.buffers.valids.data.map( (e)=>{
+			console.warn('Valid Prices:', chalk.cyan(JSON.stringify(e)));
+		});
 		this._strats = this.buffers.strats.data;
-		console.log(chalk.green(JSON.stringify(this._strats.length)));
+		console.log('Num Strats:', chalk.cyan(JSON.stringify(this._strats.length)));
 		Transaction.findAll({
 			order: [['id', 'DESC']],
 			limit: 1
 		}).then( transactions =>{
 			if(transactions && transactions.length > 0){
-				//console.log('Transaction:', chalk.cyan(JSON.stringify(transactions)));
+				console.log('Transaction:', chalk.cyan(JSON.stringify(transactions)));
 			} else {
 				console.log('no transactions');
 			}

@@ -11,7 +11,7 @@ class Decision {
 	constructor(){};
 	evaluate(buffer){
 		this.buffer = buffer;
-		this.buffer.chain().remove();
+		this.buffer.clear();
 		return new Promise( (resolve, reject)=>{
 			this.interval = {amount: 30, type: 'minutes'};
 			this.products = ['BTC-USD','BCH-USD','ETH-USD','LTC-USD']	
@@ -25,6 +25,7 @@ class Decision {
 							this.runStrats(this.product).then( data=>{
 								this.data = data;
 								this.data.product_id = product[0].product_id;
+								console.log('#');
 								this.buffer.insert(this.data);
 							});
 						}
