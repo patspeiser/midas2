@@ -18,17 +18,15 @@ class Decision {
 			return this.getProducts(this.interval, this.products)
 			.then( prods=>{
 				if(prods){
-					console.log(prods.length);
 					prods.forEach(product=>{
 						this.product = product.reverse();
 						if(this.product && this.product.length > 0){
 							this.runStrats(this.product).then( data=>{
 								this.data = data;
 								this.data.product_id = product[0].product_id;
-								console.log('#');
 								this.buffer.insert(this.data);
 							});
-						}
+						};
 					});
 					if(this.rec){
 						resolve(this.rec);

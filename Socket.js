@@ -20,9 +20,9 @@ class Socket {
 			setInterval( (socket)=>{
 				this.strats = this.buffers.strats.chain().data();
 				if(this.strats){
-					this.io.emit('refreshStrategies', { strategies: this.strats});
+					this.io.emit('refreshChart', { strategies: this.strats});
 				}	
-			}, 5000);
+			}, 2000);
 		});
 	};
 };
