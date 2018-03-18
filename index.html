@@ -1,14 +1,18 @@
 <html>
-<head>
-	<script src='/socket.io/socket.io.js'></script>
-	<script src="/chart.js/dist/Chart.js"></script>
-	<script src="/scripts.js" defer></script>
-</script>
+	<head>
+		<script src='/socket.io/socket.io.js'></script>
+		<script src="/chart.js/dist/Chart.js"></script>
 	</head>
 	<body>
-		<div id='main'>
-			<p>main</p>
-			<canvas id="chart"></canvas>
+		<div style="width:1000px!important;height:500px!important">
+			<canvas id="allPrices" ></canvas>
 		</div>
+		<div style="width:1000px!important;height:500px!important">
+			<canvas id="adx" ></canvas>
+		</div>
+		<div style="width:1000px!important;height:500px!important">
+			<canvas id="rsi" ></canvas>
+		</div>
+		<script src="/scripts.js" defer></script>
 	</body>
 </html>

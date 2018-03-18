@@ -1,4 +1,6 @@
-this.chartElement = document.getElementById('chart');
+this.allPrices = document.getElementById('allPrices');
+this.adx = document.getElementById('adx');
+this.rsi = document.getElementById('rsi');
 var socket = io(); 
 
 class DataSet {
@@ -22,35 +24,15 @@ class DataSet {
 };
 
 class C {
-	constructor(chart, ){
-		this.chart = new Chart(chart);
-	};
-	init(){
-		return new Promise( (resolve, reject)=>{
-			this.setConfig();
-			this.initialDataSet();
-			resolve(this.chart);
-			reject(false)
-		});
-	}
-	initialDataSet(){
-		this.set = new DataSet(
-			[], 
-			'', 
-			{
-				borderColor: 'rgb(255, 99, 132)',
-				fill: true 
-			}
-			);
-	};
-	setConfig(){
+	constructor(chart){
+		this.chart = chart;
 		this.config = {
 			type: 'line',
 			data: {
 				labels: [],
 				datasets: []
 			},
-			responsive: true,
+			responsive: false,
 			title: {
 				display: true,
 				text:   'crypto'
@@ -73,52 +55,58 @@ class C {
 						display: true,
 						labelString: 'something else'
 					},
-					ticks: {
-						//min: this.min * .999,
-						//max: this.max * 1.001
-					},
 				}],
 			},
 		};
-		this.chart.config = this.config;
+		this.chart = new Chart(this.chart, this.config);
 	};
 }
 
-
-
-this.main = new C(this.chartElement).init().then( (chart)=>{
-	this.chart = chart;
-
-	socket.on('refreshChart', (payload)=>{
-		this.chart.data.datasets = [];
-		this.chart.data.labels   = [];
-		this.strategies = payload.strategies;
-		if(this.strategies && this.strategies[0]){
-			this.list = this.strategies[0].sets.allPrices;
-			this.min = 0;
-			this.max = 0;
-			this.labels = [];
-			/*
-			for (let i = 0; i< this.list.length-1; i++){
-				this.labels.push(i);
-				if (this.list[i] > this.max){
-					this.max = this.list[i];
-				};
-				if(this.min === 0){
-					this.min = this.list[i];
-				} else if (this.list[i] < this.min){
-					this.min = this.list[i];
-				};
-			};
-			*/
-			console.log(this.strategies[0].data);
-			this.strategies[0].data.forEach( set => {
-				this.set = set;
-				this.dataset = new DataSet(this.set);
-				this.chart.data.datasets.push(this.dataset.data);
-				this.chart.data.labels.push(this.dataset.data);
-			});
-			this.chart.update({duration: 0});
-		}
-	})
+/*
+this.allPrices = new C(this.allPrices).init().then( allPricesChart=>{
+	this.allPricesChart = allPricesChart;
 });
+this.adx = new C(this.adx).init().then(adxIndicator=>{
+	this.adxIndicator = adxIndicator;
+});
+*/
+this.allPricesChart = new C(this.allPrices).chart;
+this.adxIndicator   = new C(this.adx).chart;
+this.rsiIndicator   = new C(this.rsi).chart;
+socket.on('refreshChart', (payload)=>{
+	//datsets
+	this.strategies = payload.strategies;
+	this.allPricesChart.data.datasets = [];
+	this.adxIndicator.data.datasets   = [];
+	this.rsiIndicator.data.datasets   = [];
+	//labels
+	this.allPricesChart.data.labels   = [];
+	this.adxIndicator.data.labels     = [];
+	this.rsiIndicator.data.labels     = [];
+
+	//graph
+	if(this.strategies && this.strategies[0]){
+		this.allPricesChart.data.datasets.push({
+			label: 'all',
+			data: this.strategies[0].sets.allPrices
+		});
+		this.allPricesChart.data.labels = Object.keys(this.strategies[0].sets.allPrices);
+		this.allPricesChart.update({duration: 0});
+		
+		this.adxIndicator.data.datasets.push({
+			label: 'adx',
+			data: this.strategies[0].data[0][0]
+		});
+		this.adxIndicator.data.labels = Object.keys(this.strategies[0].data[0][0]);
+		this.adxIndicator.update({duration: 0});
+
+		this.rsiIndicator.data.datasets.push({
+			label: 'rsi',
+			data: this.strategies[0].data[6][0]
+		});
+		console.log(this.strategies[0].data[6][0])
+		this.rsiIndicator.data.labels = Object.keys(this.strategies[0].data[6][0]);
+		this.rsiIndicator.update({duration: 0});
+	};
+});
+
