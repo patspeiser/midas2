@@ -1,7 +1,5 @@
 this.allPrices = document.getElementById('allPrices');
 this.adx = document.getElementById('adx');
-this.rsi = document.getElementById('rsi');
-this.cci = document.getElementById('cci');
 var socket = io(); 
 
 class DataSet {
@@ -25,6 +23,7 @@ class DataSet {
 };
 
 class C {
+	//Chart! couldn't use Chart because there is a lot of shit already named Chart
 	constructor(chart){
 		this.chart = chart;
 		this.config = {
@@ -63,27 +62,40 @@ class C {
 	};
 }
 
+class A{
+	//algo
+	constructor(data){
+		this.name = '_' + Date.now();
+		this.data = data;
+	};
+	getSetById(id){
+		if(this.data[id])
+			return this.data[id];
+	};
+	run(){
+		this.set = this.getSetById(0);
+		this.set1 = this.getSetById(1);
+		this.set2 = this.getSetById(2);
+		this.set3 = this.getSetById(3);
+		console.log(this.set, this.set1, this.set2, this.set3);
+		//get 
+	}
+
+}
+
 this.allPricesChart = new C(this.allPrices).chart;
-this.adxIndicator   = new C(this.adx).chart;
-this.rsiIndicator   = new C(this.rsi).chart;
-this.cciIndictaor   = new C(this.cci).chart;
 socket.on('refreshChart', (payload)=>{
 	this.strategies = payload.strategies;
-	console.dir(this.strategies);
-	this._strat = this.strategies[0];
+	this._strat      = this.strategies[0];
 	//datsets
 	this.allPricesChart.data.datasets = [];
-	this.adxIndicator.data.datasets   = [];
-	this.rsiIndicator.data.datasets   = [];
+	
 	//labels
 	this.allPricesChart.data.labels   = [];
-	this.adxIndicator.data.labels     = [];
-	this.rsiIndicator.data.labels     = [];
-
+	
 	//graph
 	if(this.strategies && this._strat){
-		this.workingStrat = new Persia();
-		console.log(this.strategies[0].sets.allPrices.length, this._strat.data[2][0].length )
+		this.A = new A(this.strategies).run();
 		this.allPricesChart.data.datasets.push({
 			label: 'all',
 			data: this._strat.sets.allPrices
