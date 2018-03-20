@@ -68,20 +68,30 @@ class A{
 		this.name = '_' + Date.now();
 		this.data = data;
 	};
-	getSetById(id){
-		if(this.data[id])
-			return this.data[id];
+	getDataSetById(id){
+		this.id = id;
+		return this.data[this.id];
+	};
+	getStrategyById(id){
+		this.id = id;
+		if(this.data && this.id && this.data.strategies[this.id])
+			return this.data.strategies[this.id];
+	};
+	getStrategyByName(name, set){
+		this.name 		= name;
+		this.set 		= set;
+		if(this.set.strategies.indexOf(this.name) >= 0){
+			this.index = this.data.strategies.indexOf(this.name);
+			return this.getSetById(this.index);
+		};
 	};
 	run(){
-		this.set = this.getSetById(0);
-		this.set1 = this.getSetById(1);
-		this.set2 = this.getSetById(2);
-		this.set3 = this.getSetById(3);
-		console.log(this.set, this.set1, this.set2, this.set3);
-		//get 
-	}
-
-}
+		this.set = this.getDataSetById(2);
+		console.log(this.set);
+		this.adx = this.getStrategyByName('adx', this.set);
+		console.log(this.adx);
+	};
+};
 
 this.allPricesChart = new C(this.allPrices).chart;
 socket.on('refreshChart', (payload)=>{
