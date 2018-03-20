@@ -8,6 +8,7 @@ class Strategy{
 	};
 	adx(sets, options){
 		//Average Directional Movement Index
+		//over 25  === strong
 		this.sets 		= sets;
 		this.options 	= options;
 		this.period 	= this.options.period;
@@ -19,6 +20,7 @@ class Strategy{
 		});
 	};
 	atr(sets, options){
+		//gotta check what i get back here
 		//Average True Range
 		this.sets = sets;
 		this.options = options;

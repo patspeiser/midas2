@@ -1,6 +1,7 @@
 this.allPrices = document.getElementById('allPrices');
 this.adx = document.getElementById('adx');
 this.rsi = document.getElementById('rsi');
+this.cci = document.getElementById('cci');
 var socket = io(); 
 
 class DataSet {
@@ -62,20 +63,15 @@ class C {
 	};
 }
 
-/*
-this.allPrices = new C(this.allPrices).init().then( allPricesChart=>{
-	this.allPricesChart = allPricesChart;
-});
-this.adx = new C(this.adx).init().then(adxIndicator=>{
-	this.adxIndicator = adxIndicator;
-});
-*/
 this.allPricesChart = new C(this.allPrices).chart;
 this.adxIndicator   = new C(this.adx).chart;
 this.rsiIndicator   = new C(this.rsi).chart;
+this.cciIndictaor   = new C(this.cci).chart;
 socket.on('refreshChart', (payload)=>{
-	//datsets
 	this.strategies = payload.strategies;
+	console.dir(this.strategies);
+	this._strat = this.strategies[0];
+	//datsets
 	this.allPricesChart.data.datasets = [];
 	this.adxIndicator.data.datasets   = [];
 	this.rsiIndicator.data.datasets   = [];
@@ -85,28 +81,17 @@ socket.on('refreshChart', (payload)=>{
 	this.rsiIndicator.data.labels     = [];
 
 	//graph
-	if(this.strategies && this.strategies[0]){
+	if(this.strategies && this._strat){
+		this.workingStrat = new Persia();
+		console.log(this.strategies[0].sets.allPrices.length, this._strat.data[2][0].length )
 		this.allPricesChart.data.datasets.push({
 			label: 'all',
-			data: this.strategies[0].sets.allPrices
+			data: this._strat.sets.allPrices
 		});
-		this.allPricesChart.data.labels = Object.keys(this.strategies[0].sets.allPrices);
+		this.allPricesChart.data.labels = Object.keys(this._strat.sets.allPrices);
 		this.allPricesChart.update({duration: 0});
-		
-		this.adxIndicator.data.datasets.push({
-			label: 'adx',
-			data: this.strategies[0].data[0][0]
-		});
-		this.adxIndicator.data.labels = Object.keys(this.strategies[0].data[0][0]);
-		this.adxIndicator.update({duration: 0});
-
-		this.rsiIndicator.data.datasets.push({
-			label: 'rsi',
-			data: this.strategies[0].data[6][0]
-		});
-		console.log(this.strategies[0].data[6][0])
-		this.rsiIndicator.data.labels = Object.keys(this.strategies[0].data[6][0]);
-		this.rsiIndicator.update({duration: 0});
 	};
 });
+
+
 

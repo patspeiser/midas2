@@ -21,10 +21,10 @@ class Gdax {
 	};
 	init(){
 		this.ingestStream();
-		this.processBuffer  	= new Process(this, this.processStream,  1000 * 3);
+		this.processBuffer  	= new Process(this, this.processStream,  1000 * 10);
 		this.updateAccounts		= new Process(this, this.updateAccounts, 1000 * 5 );
 		this.determine     		= new Process(this, this.determine, 1000 * 5);
-		this.displayValidPrices = new Process(this, this.infolog, 1000 * 1 );
+		//this.infolog 			= new Process(this, this.infolog, 1000 * 1 );
 	};
 	ingestStream(){
 		this.socket.on('message', data =>{
