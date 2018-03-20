@@ -14,7 +14,7 @@ class Gdax {
 	constructor(buffers){
 		this.buffers = buffers;
 		console.log(chalk.yellow('##new gdax instance##'));
-		this.products = ['BTC-USD','BCH-USD','ETH-USD','LTC-USD']
+		this.products = ['BTC-USD','BCH-USD','ETH-USD','LTC-USD'];
 		this.socket = new gdax.WebsocketClient(this.products,config.websocketUrl,null,['match']);
 		this.client = new gdax.AuthenticatedClient(config.auth.apiKey, config.auth.apiSecret, config.auth.passphrase, config.baseUrl);
 		this.decision  = new Decision();
