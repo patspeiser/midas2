@@ -63,33 +63,49 @@ class C {
 }
 
 class A{
-	//algo
 	constructor(data){
 		this.name = '_' + Date.now();
 		this.data = data;
 	};
-	getDataSetById(id){
-		this.id = id;
+	getProductSetById(id){
+		this.id  = id;
 		return this.data[this.id];
 	};
-	getStrategyById(id){
-		this.id = id;
-		if(this.data && this.id && this.data.strategies[this.id])
-			return this.data.strategies[this.id];
+	getStrategySetById(id, set){
+		this.id  = id;
+		this.set = set; 
+		if(this.set && this.set.data[this.id]){
+			return this.set.data[this.id];
+		}
 	};
 	getStrategyByName(name, set){
 		this.name 		= name;
 		this.set 		= set;
 		if(this.set.strategies.indexOf(this.name) >= 0){
-			this.index = this.data.strategies.indexOf(this.name);
-			return this.getSetById(this.index);
+			this.index = this.set.strategies.indexOf(this.name);
+			return this.getStrategySetById(this.index, this.set);
 		};
 	};
 	run(){
-		this.set = this.getDataSetById(2);
-		console.log(this.set);
-		this.adx = this.getStrategyByName('adx', this.set);
-		console.log(this.adx);
+		this.set 	= this.getProductSetById(2);
+		this.adx 	= this.getStrategyByName('adx', this.set)[0];
+		this.ultosc = this.getStrategyByName('ultosc', this.set)[0];
+		this.cci    = this.getStrategyByName('cci', this.set);
+		this.rsi    = this.getStrategyByName('cci', this.rsi);
+		this.overbought = false;
+		this.oversold   = false;
+		if(this.ultosc[this.ultosc.length-1] >= 90){
+			this.overbought = true;
+		}
+		if(this.ultosc[this.ultosc.length-1] <= 10){
+			this.oversold   = true;
+		}
+		//if the recent adx > 75
+		//if(this.adx[this.adx.length-1] > 90)
+		//ultosc < 30 = oversold	
+		//ultosc > 70 = overbought - sell
+		//need cci
+		//need rsi
 	};
 };
 
