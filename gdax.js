@@ -38,7 +38,7 @@ class Gdax {
 		});
 	};
 	processStream(){
-		this.buffers.processBuffer(this.buffers);
+		this.buffers.processStream(this.buffers);
 	};
 	determine(){
 		this.minTradeTime = 1000 * 60 * 20;

@@ -20,7 +20,6 @@ class Strategy{
 		});
 	};
 	atr(sets, options){
-		//gotta check what i get back here
 		//Average True Range
 		this.sets = sets;
 		this.options = options;
@@ -127,7 +126,7 @@ class Strategy{
 			});
 		});
 	};
-	ultosc(sets, options){
+	ultOsc(sets, options){
 		//Ultimate Oscillator
 		this.sets = sets;
 		this.options 		= options;

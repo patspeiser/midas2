@@ -4,7 +4,6 @@ const chalk = require('chalk');
 const db = require(path.join(__dirname, 'db'));
 const Models = db.models;
 const Ticker = Models.Ticker;
-const Valid	= require(path.join(__dirname, 'Valid'));
 
 class Buffer{
 	constructor(){
@@ -13,15 +12,11 @@ class Buffer{
 	};
 	init(){
 		this.messages = 	this.buffer.addCollection('message');
-		this.valids  = 		this.buffer.addCollection('valids');
 		this.strats   =		this.buffer.addCollection('strategies');
-		this.initialPriceList 	= new Valid();
-		this.valids.insert(this.initialPriceList);
 		return new Promise( (resolve, reject)=>{
 			this.buffers = {
-				processBuffer   : this.processBuffer,
+				processStream   : this.processStream,
 				messages 		: this.messages,
-				valids   		: this.valids,
 				strats   		: this.strats
 			};
 			resolve(this.buffers);
@@ -43,6 +38,19 @@ class Buffer{
 	findOrCreateValidPrices(prices){
 		this.prices = prices;
 	};
+	processStream(buffers){
+		this.buffers = buffers;
+		this.messages = this.buffers.messages
+		this.events = this.messages.chain().data();
+		if(this.events){
+			this.events.forEach( event =>{
+				Ticker.create(event).then( t =>{
+					this.messages.remove(event);
+				});
+			});
+		};
+	};
+	/*
 	processBuffer(buffers){
 		this.buffers = buffers;
 		this.collection = this.buffers.messages;
@@ -51,7 +59,7 @@ class Buffer{
 			this.upperBound = 1.02;
 			this.lowerBound = .98;
 			this.events = this.collection.chain().data();
-			this.validPrices = this.valids.chain().data();
+			//this.validPrices = this.valids.chain().data();
 			this.events.forEach( event =>{
 				this.validPrices.map( (v)=>{
 					this.validPrice = v[event.product_id];
@@ -70,6 +78,7 @@ class Buffer{
 			});
 		};
 	};
+	*/
 };
 
 module.exports = Buffer;

@@ -13,7 +13,7 @@ class Decision {
 		this.buffer = buffer;
 		this.buffer.clear();
 		return new Promise( (resolve, reject)=>{
-			this.interval = {amount: 120, type: 'minutes'};
+			this.interval = {amount: 45, type: 'minutes'};
 			this.products = ['BTC-USD','BCH-USD','ETH-USD','LTC-USD']	
 			return this.getProducts(this.interval, this.products)
 			.then( prods=>{
@@ -71,11 +71,11 @@ class Decision {
 		/*2*/	bbands: this.strat.bbands(	this.priceSets, {period: 5, stdDev: 1}),
 		/*3*/	cci: 	this.strat.cci(		this.priceSets, {period: 5}),
 		/*4*/	ema: 	this.strat.ema(		this.priceSets, {period: 5}),
-		/*5*/	macd: 	this.strat.macd(	this.priceSets, {short: 1, long: 3, period: 5}),
+		/*5*/	macd: 	this.strat.macd(	this.priceSets, {short: 5, long: 10, period: 15}),
 		/*6*/	rsi: 	this.strat.rsi(		this.priceSets, {period: 5}),
 		/*7*/	sma:    this.strat.sma(		this.priceSets, {period: 5}),
 		/*8*/	stoch: 	this.strat.stoch(	this.priceSets, {kPeriod: 5, kSlowingPeriod: 3 , dPeriod: 3}),
-		/*9*/	ultosc: this.strat.ultosc(	this.priceSets, {short: 2, medium: 3, long: 5})
+		/*9*/	ultOsc: this.strat.ultOsc(	this.priceSets, {short:5, medium: 10, long: 15})
 			};
 			
 			this.keys = Object.keys(this.strategies);
