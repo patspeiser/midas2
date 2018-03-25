@@ -10,6 +10,9 @@ class App {
 		this.app.use(express.static('node_modules'));
 		this.app.use(express.static('scripts'));
 		this.app.get('/', (err, res, next)=>{
+			if(err){
+				//console.error(err);
+			}
 			res.sendFile('index.html', {root: './'});
 		});
 	};

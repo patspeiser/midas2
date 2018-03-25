@@ -39,9 +39,9 @@ class Buffer{
 		this.prices = prices;
 	};
 	processStream(buffers){
-		this.buffers = buffers;
-		this.messages = this.buffers.messages
-		this.events = this.messages.chain().data();
+		this.buffers 	= buffers;
+		this.messages	= this.buffers.messages
+		this.events 	= this.messages.chain().data();
 		if(this.events){
 			this.events.forEach( event =>{
 				Ticker.create(event).then( t =>{

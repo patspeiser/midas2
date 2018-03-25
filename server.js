@@ -55,12 +55,12 @@ class Server{
 		//now the servers up
 		//init memory buckets here then
 		//init additional services (socket server, gdax, etc);
-		this.server 			= server;
+		this.server = server;
 		this.buffer = new Buffer().init().then( (buffers)=>{
-			this.buffers = buffers; 
-			this.io   = new io(this.server, this.buffers).init();
-			this.gdax = new Gdax(this.buffers).init();
-			this.routes = app.setRoutes();
+			this.buffers 	= buffers; 
+			this.io   		= new io(this.server, this.buffers).init();
+			this.gdax 		= new Gdax(this.buffers).init();
+			this.routes 	= app.setRoutes();
 		});
 	};
 };

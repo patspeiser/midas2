@@ -25,6 +25,13 @@ class C {
 		this.chart = chart;
 		this.config = {
 			type: 'line',
+			options: {
+				elements: {
+					line: {
+						tension: 0
+					}
+				}
+			},
 			data: {
 				labels: [],
 				datasets: []
@@ -74,7 +81,7 @@ var _macdChart 			= new C(_macdElement).chart;
 
 class A{
 	constructor(data){
-		this.name = '_' + Date.now();
+		this.name = '#>' + Date.now();
 		this.data = data;
 	};
 	getProductSetById(id){
@@ -159,7 +166,6 @@ class A{
 			if(this.rsi[this.rsi.length-1] <= 10){
 				this.rsiResult   = true;
 			};
-
 			//macd
 			_macdChart.data.labels = Object.keys(this.macd);
 			_macdChart.data.datasets = [{
@@ -177,10 +183,11 @@ class A{
 				} else if (this.macd[i] < this.macdMin){
 					this.macdMin = this.macd[i];
 				};
-				_macdChart.options.scales.yAxes[0].ticks.min = this.macdMin;
-				_macdChart.options.scales.yAxes[0].ticks.max = this.macdMax;
-				_macdChart.update({duration: 0});
+				
 			};
+			_macdChart.options.scales.yAxes[0].ticks.min = this.macdMin;
+			_macdChart.options.scales.yAxes[0].ticks.max = this.macdMax;
+			_macdChart.update({duration: 0});
 		};	
 		//if the recent adx > 75
 		//if(this.adx[this.adx.length-1] > 90)

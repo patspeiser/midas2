@@ -21,88 +21,136 @@ class Decision {
 					prods.forEach(product=>{
 						this.product = product.reverse();
 						if(this.product && this.product.length > 0){
-							this.runStrats(this.product).then( data=>{
+							this.runStrats(this.product, 14).then( data=>{
 								this.data = data;
 								this.data.product_id = product[0].product_id;
 								this.buffer.insert(this.data);
+								resolve();
 							});
 						};
 					});
-					if(this.rec){
-						resolve(this.rec);
-						reject();
-					};
 				};
 			});
+			reject('errDecisionEvaluate');
 		});
 	};
-	runStrats(sets){
-		if(sets){
+	runStrats(sets, period){
+		this.period = period;
+		this.sets = sets; 
+		if(this.sets){
 			this.product_id = sets[0].product_id;
 			this.strat = new Strategy('gdax');
-			this.sets = sets;
-			this.prices = this.sets.map( set=>{
-				if (set.price)
-					return set.price;
-			});
-			this.candles = this.createCandles(this.prices, 10);
-			this.highs = [];
-			this.lows  = [];
-			this.opens = [];
-			this.closes= [];
-			this.candles.map( c=>{
-				if(c.open && c.close && c.high && c.low){
-					this.highs.push(c.high);
-					this.lows.push(c.low);
-					this.opens.push(c.open);
-					this.closes.push(c.close);
-				};
-			});
-			this.priceSets = {
-				allPrices: this.prices,
-				high: this.highs,
-				low : this.lows,
-				open: this.opens,
-				close: this.closes
-			};
-			this.strategies = {
-		/*0*/	adx: 	this.strat.adx(		this.priceSets, {period: 5}),
-		/*1*/	atr: 	this.strat.atr(		this.priceSets, {period: 5}),
-		/*2*/	bbands: this.strat.bbands(	this.priceSets, {period: 5, stdDev: 1}),
-		/*3*/	cci: 	this.strat.cci(		this.priceSets, {period: 5}),
-		/*4*/	ema: 	this.strat.ema(		this.priceSets, {period: 5}),
-		/*5*/	macd: 	this.strat.macd(	this.priceSets, {short: 5, long: 10, period: 15}),
-		/*6*/	rsi: 	this.strat.rsi(		this.priceSets, {period: 5}),
-		/*7*/	sma:    this.strat.sma(		this.priceSets, {period: 5}),
-		/*8*/	stoch: 	this.strat.stoch(	this.priceSets, {kPeriod: 5, kSlowingPeriod: 3 , dPeriod: 3}),
-		/*9*/	ultOsc: this.strat.ultOsc(	this.priceSets, {short:5, medium: 10, long: 15})
-			};
-			
-			this.keys = Object.keys(this.strategies);
-			this.values = Object.values(this.strategies);
-			var that = this;
-			return Promise.all(this.values).then(function(data){
-				if(data)
-					return {
-						sets     	: that.priceSets, 
-						strategies 	: that.keys, 
-						data       	: data
+			this.candles = this.createCandles(this.sets, this.period);
+			this.highs   = [];
+			this.lows    = [];
+			this.opens   = [];
+			this.closes  = [];
+			this.volumes  = []
+			if(this.candles.length > 0){
+				this.candles.map( c=>{
+					if(c.open && c.close && c.high && c.low && c.volume){
+						this.highs.push(c.high);
+						this.lows.push(c.low);
+						this.opens.push(c.open);
+						this.closes.push(c.close);
+						this.volumes.push(c.volume);
 					};
-			});
+				});
+				this.priceSets = {
+					product_id: this.product_id,
+					allPrices: this.prices,
+					high: this.highs,
+					low : this.lows,
+					open: this.opens,
+					close: this.closes
+				};
+				this.period = this.priceSets.high.length / 5;
+				this.strategies = {
+					/*0*/	adx: 	this.strat.adx(		this.priceSets, {period: this.period}),
+					/*1*/	atr: 	this.strat.atr(		this.priceSets, {period: this.period}),
+					/*2*/	bbands: this.strat.bbands(	this.priceSets, {period: this.period, stdDev: 1}),
+					/*3*/	cci: 	this.strat.cci(		this.priceSets, {period: this.period}),
+					/*4*/	ema: 	this.strat.ema(		this.priceSets, {period: this.period}),
+					/*5*/	macd: 	this.strat.macd(	this.priceSets, {short: 10, long: 20, period: this.period}),
+					/*6*/	rsi: 	this.strat.rsi(		this.priceSets, {period: this.period}),
+					/*7*/	sma:    this.strat.sma(		this.priceSets, {period: this.period}),
+					/*8*/	stoch: 	this.strat.stoch(	this.priceSets, {kPeriod: 5, kSlowingPeriod: 3 , dPeriod: 3}),
+					/*9*/	ultOsc: this.strat.ultOsc(	this.priceSets, {short:this.period, medium: this.period * 2 , long: this.period * 3})
+				};
+
+				this.keys = Object.keys(this.strategies);
+				this.values = Object.values(this.strategies);
+				var that = this;
+				return Promise.all(this.values).then(function(data){
+					if(data){
+						return {
+							sets     	: that.priceSets, 
+							strategies 	: that.keys, 
+							data       	: data
+						};
+						resolve();
+					} else {
+						reject("errDecisionRunStrats")
+					};
+				});
+			}
 		}
 	};
 	createCandles(set, period){
 		this.set = set;
 		this.period = period;
-		this.candles = [];
-		if(this.set.length > this.period){
-			for(let i = 0; i < this.set.length-this.period-1; i+=this.period){
-				this.candle = {
-					high: 0,
-					low : 0,
-					open: 0,
-					close:0
-				};	
+
+		function candle(set, period){
+			this.set = set;
+			this.period = period * 1000 * 60; // period should be minutes for now
+			this.candles = [];
+			if(this.set){
+				this.startTime = new Date(this.set[0].time).getTime();
+				this.endTime   = this.startTime + this.period;
+				while(this.set){
+					this.candle = {
+						high: 	0,
+						low : 	0,
+						open: 	0,
+						close: 	0,
+						volume: 0
+					};
+					this.event = this.set.shift();
+					if(this.event){
+						this.eventTime = new Date(this.event.time).getTime();
+						if(this.eventTime < this.endTime){
+							this.volume+=1;
+							this.price = this.event.price;
+							if(this.candle.low === 0)
+								this.candle.low = this.price;
+							if(this.price >= this.candle.high)
+								this.candle.high = this.price;
+							if(this.price <= this.candle.low)
+								this.candle.low  = this.price;
+							if(this.open === 0)
+								this.candle.open = this.price;
+							if(this.close === this.period-1)
+								this.candle.close = this.price;
+						}  else {
+							this.candles.push(this.candle);
+							this.startTime = this.endTime;
+							this.endTime   = this.startTime + this.endTime;
+						};
+					}
+				};
+				console.log(this.candles);	
+			};		
+		};
+		candle.call(this, this.set, this.period);
+		/*
+		this.prices = this.sets.map( set=>{
+			if (set.price)
+				return set.price;
+		});
+		
+		if(this.sets.length > this.period){
+			for(let i = 0; i < this.set.length-1; i++){
+				
 				for(let j = 0; j<this.period; j++){
 					this.price = set[i+j];
 					if(this.candle.low === 0)
@@ -120,6 +168,7 @@ class Decision {
 			};
 			return this.candles;
 		};
+		*/
 	};
 	createRecommendation(rows){
 		this.rows = rows;
