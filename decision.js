@@ -13,7 +13,7 @@ class Decision {
 		this.buffer = buffer;
 		this.buffer.clear();
 		return new Promise( (resolve, reject)=>{
-			this.interval = {amount: 45, type: 'minutes'};
+			this.interval = {amount: 60, type: 'minutes'};
 			this.products = ['BTC-USD','BCH-USD','ETH-USD','LTC-USD']	
 			return this.getProducts(this.interval, this.products)
 			.then( prods=>{
@@ -22,8 +22,9 @@ class Decision {
 						var product_id = product[0].product_id;
 						this.product = product.reverse();
 						if(this.product && this.product.length > 0){
-							this.runStrats(this.product, 1).then( data=>{
+							this.runStrats(this.product, 5).then( data=>{
 								this.data = data;
+								console.log(this.data);
 								this.data.product_id = product_id;
 								this.buffer.insert(this.data);
 								resolve();
@@ -38,65 +39,70 @@ class Decision {
 	runStrats(sets, period){
 		this.period = period;
 		this.sets = sets; 
-		if(this.sets && this.sets.length > 0){
-			this.product_id = this.sets[0].product_id;
-			this.strat = new Strategy('gdax');
-			this.candles = this.createCandles(this.sets, this.period);
-			this.highs   = [];
-			this.lows    = [];
-			this.opens   = [];
-			this.closes  = [];
-			this.volumes  = [];
-			if(this.candles && this.candles.length > 0){
-				this.candles.map( c=>{
-					if(c.open && c.close && c.high && c.low && c.volume){
-						this.highs.push(c.high);
-						this.lows.push(c.low);
-						this.opens.push(c.open);
-						this.closes.push(c.close);
-						this.volumes.push(c.volume);
-					};
+		return new Promise( (resolve, reject)=>{
+			if(this.sets && this.sets.length > 0){
+				this.product_id = this.sets[0].product_id;
+				this.strat = new Strategy('gdax');
+				this.prices   = [];
+				this.sets.map( set =>{
+					this.set = set;
+					this.prices.push(this.set.price);
 				});
-				this.priceSets = {
-					product_id: this.product_id,
-					allPrices: this.prices,
-					high: this.highs,
-					low : this.lows,
-					open: this.opens,
-					close: this.closes
-				};
-				this.period = this.priceSets.high.length / 5;
-				this.strategies = {
+				this.candles = this.createCandles(this.sets, this.period);
+				this.highs   = [];
+				this.lows    = [];
+				this.opens   = [];
+				this.closes  = [];
+				this.volumes  = [];
+				if(this.candles && this.candles.length > 0){
+					this.candles.map( c=>{
+						if(c.open && c.close && c.high && c.low && c.volume){
+							this.highs.push(c.high);
+							this.lows.push(c.low);
+							this.opens.push(c.open);
+							this.closes.push(c.close);
+							this.volumes.push(c.volume);
+						};
+					});
+					this.priceSets = {
+						product_id: this.product_id,
+						allPrices: this.prices,
+						high: this.highs,
+						low : this.lows,
+						open: this.opens,
+						close: this.closes,
+						volume: this.volumes
+					};
+					this.period = this.priceSets.high.length;
+					this.strategies = {
 						adx: 	this.strat.adx(		this.priceSets, {period: this.period}),
 						atr: 	this.strat.atr(		this.priceSets, {period: this.period}),
-						//bbands: this.strat.bbands(	this.priceSets, {period: this.period, stdDev: 1}),
-						//cci: 	this.strat.cci(		this.priceSets, {period: this.period}),
-						//ema: 	this.strat.ema(		this.priceSets, {period: this.period}),
-						//macd: 	this.strat.macd(	this.priceSets, {short: 10, long: 20, period: this.period}),
-						//rsi: 	this.strat.rsi(		this.priceSets, {period: this.period}),
-						//sma:    this.strat.sma(		this.priceSets, {period: this.period}),
-						//stoch: 	this.strat.stoch(	this.priceSets, {kPeriod: 5, kSlowingPeriod: 3 , dPeriod: 3}),
-						//ultOsc: this.strat.ultOsc(	this.priceSets, {short:this.period, medium: this.period * 2 , long: this.period * 3})
-				};
-
-				this.keys = Object.keys(this.strategies);
-				this.values = Object.values(this.strategies);
-				var that = this;
-				return Promise.all(this.values).then(function(data){
-					if(data){
-						return {
-							sets     	: that.priceSets, 
-							strategies 	: that.keys, 
-							data       	: data
-						};
-						resolve();
-					} else {
-						reject("errDecisionRunStrats")
+						bbands: this.strat.bbands(	this.priceSets, {period: this.period, stdDev: 1}),
+						cci: 	this.strat.cci(		this.priceSets, {period: this.period}),
+						ema: 	this.strat.ema(		this.priceSets, {period: this.period}),
+						macd: 	this.strat.macd(	this.priceSets, {short: this.period/2, long: this.period*2, period: this.period}),
+						rsi: 	this.strat.rsi(		this.priceSets, {period: this.period}),
+						sma:    this.strat.sma(		this.priceSets, {period: this.period}),
+						stoch: 	this.strat.stoch(	this.priceSets, {kPeriod: 5, kSlowingPeriod: 3 , dPeriod: 3}),
+						ultOsc: this.strat.ultOsc(	this.priceSets, {short:this.period, medium: this.period * 2 , long: this.period * 3})
 					};
-				});
+					this.keys = Object.keys(this.strategies);
+					this.values = Object.values(this.strategies);
+					var that = this;
+					return Promise.all(this.values).then(function(data){
+						if(data){
+							resolve({
+								sets     	: that.priceSets, 
+								strategies 	: that.keys, 
+								data       	: data
+							});
+						} else {
+							reject("errDecisionRunStrats")
+						};
+					});
+				}
 			}
-			reject("errDecisionRunStrats");
-		}
+		});
 	};
 	createCandles(set, period){
 		this.set = set;

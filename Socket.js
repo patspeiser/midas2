@@ -19,6 +19,7 @@ class Socket {
 			console.log(chalk.green('connection'));
 			setInterval( (socket)=>{
 				this.strats = this.buffers.strats.chain().data();
+				console.log(this.strats);
 				if(this.strats){
 					this.io.emit('refreshChart', { strategies: this.strats});
 				}	
