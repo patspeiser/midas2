@@ -96,10 +96,11 @@ class A{
 		}
 	};
 	getStrategyByName(name, set){
+		console.log(set);
 		this.name 		= name;
 		this.set 		= set;
-		if(this.set && this.set.strategies.indexOf(this.name) >= 0){
-			this.index = this.set.strategies.indexOf(this.name);
+		if(this.set && Object.keys(this.set.strategies).indexOf(this.name) >= 0){
+			this.index = Object.keys(this.set.strategies).indexOf(this.name);
 			return this.getStrategySetById(this.index, this.set);
 		};
 	};

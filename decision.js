@@ -85,6 +85,7 @@ class Decision {
 		return Promise.all(this.strats.map( s=>{
 			return Promise.all(Object.values(s.strategies)).then( (data)=>{
 				s.data = data;
+				console.log(chalk.magenta(JSON.stringify(s)));
 				buffer.insert(s);
 			});	
 		})).then(function(data){
