@@ -135,6 +135,7 @@ class Strategy{
 		this.long        	= this.options.long; 
 		return new Promise( (resolve,reject)=>{
 			T.indicators.ultosc.indicator([this.sets.high, this.sets.low, this.sets.close], [this.short, this.medium, this.long], (err, res)=>{
+				console.log(res);
 				resolve(res);
 				reject(err);
 			});

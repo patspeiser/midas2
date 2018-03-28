@@ -96,7 +96,6 @@ class A{
 		}
 	};
 	getStrategyByName(name, set){
-		console.log(set);
 		this.name 		= name;
 		this.set 		= set;
 		if(this.set && Object.keys(this.set.strategies).indexOf(this.name) >= 0){
@@ -201,7 +200,6 @@ class A{
 
 
 socket.on('refreshChart', (payload)=>{
-	console.log('here', payload);
 	this.strategies = payload.strategies;
 	this._strat      = this.strategies[0];
 	//datsets

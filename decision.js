@@ -18,7 +18,7 @@ class Decision {
 			return this.getProducts(this.interval, this.products)
 			.then( prods=>{
 				if(prods){
-					this.runStrats(this.buffer, prods, 1);
+					this.runStrats(this.buffer, prods, 5);
 				};
 			});
 		});
@@ -63,16 +63,16 @@ class Decision {
 						volume: this.volumes
 					};
 					this.strategies = {
-						adx: 	this.strat.adx(		this.priceSets, {period: this.period}),
-						atr: 	this.strat.atr(		this.priceSets, {period: this.period}),
-						bbands: this.strat.bbands(	this.priceSets, {period: this.period, stdDev: 1}),
-						cci: 	this.strat.cci(		this.priceSets, {period: this.period}),
-						ema: 	this.strat.ema(		this.priceSets, {period: this.period}),
-						macd: 	this.strat.macd(	this.priceSets, {short: this.period/2, long: this.period*2, period: this.period}),
-						rsi: 	this.strat.rsi(		this.priceSets, {period: this.period}),
-						sma:    this.strat.sma(		this.priceSets, {period: this.period}),
+						adx: 	this.strat.adx(		this.priceSets, {period: period}),
+						atr: 	this.strat.atr(		this.priceSets, {period: period}),
+						bbands: this.strat.bbands(	this.priceSets, {period: period, stdDev: 1}),
+						cci: 	this.strat.cci(		this.priceSets, {period: period}),
+						ema: 	this.strat.ema(		this.priceSets, {period: period}),
+						macd: 	this.strat.macd(	this.priceSets, {short: period/2, long: period*2, period: period}),
+						rsi: 	this.strat.rsi(		this.priceSets, {period: period}),
+						sma:    this.strat.sma(		this.priceSets, {period: period}),
 						stoch: 	this.strat.stoch(	this.priceSets, {kPeriod: 5, kSlowingPeriod: 3 , dPeriod: 3}),
-						ultOsc: this.strat.ultOsc(	this.priceSets, {short:this.period, medium: this.period * 2 , long: this.period * 3})
+						ultOsc: this.strat.ultOsc(	this.priceSets, {short: period, medium: period * 2 , long: period * 3})
 					};
 					this.strats.push({
 						product_id: this.product_id,
@@ -85,7 +85,7 @@ class Decision {
 		return Promise.all(this.strats.map( s=>{
 			return Promise.all(Object.values(s.strategies)).then( (data)=>{
 				s.data = data;
-				console.log(chalk.magenta(JSON.stringify(s)));
+				console.log(data);
 				buffer.insert(s);
 			});	
 		})).then(function(data){
