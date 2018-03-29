@@ -13,7 +13,7 @@ class Decision {
 		this.buffer = buffer;
 		this.buffer.clear();
 		return new Promise( (resolve, reject)=>{
-			this.interval = {amount: 60, type: 'minutes'};
+			this.interval = {amount: 180, type: 'minutes'};
 			this.products = ['BTC-USD','BCH-USD','ETH-USD','LTC-USD']	
 			return this.getProducts(this.interval, this.products)
 			.then( prods=>{
@@ -37,6 +37,7 @@ class Decision {
 				this.product.map( product =>{
 					this.prices.push(product.price);
 				});
+				//console.log(chalk.green(this.period));
 				this.candles = this.createCandles(this.product, this.period, this.product_id);
 				this.highs   = [];
 				this.lows    = [];
@@ -68,11 +69,12 @@ class Decision {
 						bbands: this.strat.bbands(	this.priceSets, {period: period, stdDev: 1}),
 						cci: 	this.strat.cci(		this.priceSets, {period: period}),
 						ema: 	this.strat.ema(		this.priceSets, {period: period}),
-						macd: 	this.strat.macd(	this.priceSets, {short: period/2, long: period*2, period: period}),
-						rsi: 	this.strat.rsi(		this.priceSets, {period: period}),
+						macd: 	this.strat.macd(	this.priceSets, {short: period *5, long: period*7, period: period*11}),
+						rsi: 	this.strat.rsi(		this.priceSets, {period: period * 20}),
 						sma:    this.strat.sma(		this.priceSets, {period: period}),
 						stoch: 	this.strat.stoch(	this.priceSets, {kPeriod: 5, kSlowingPeriod: 3 , dPeriod: 3}),
-						ultOsc: this.strat.ultOsc(	this.priceSets, {short: period, medium: period * 2 , long: period * 3})
+						ultOsc: this.strat.ultOsc(	this.priceSets, {short: period, medium: period * 2 , long: period * 3}),
+						vosc:   this.strat.vosc( 	this.priceSets, {short: period, long: period*3}),
 					};
 					this.strats.push({
 						product_id: this.product_id,
@@ -85,7 +87,6 @@ class Decision {
 		return Promise.all(this.strats.map( s=>{
 			return Promise.all(Object.values(s.strategies)).then( (data)=>{
 				s.data = data;
-				console.log(data);
 				buffer.insert(s);
 			});	
 		})).then(function(data){
@@ -151,6 +152,7 @@ class Decision {
 				}
 			};
 		};
+		console.log(chalk.gray(this.candles.length));
 		return this.candles;	
 	};
 	getProducts(interval, productList){

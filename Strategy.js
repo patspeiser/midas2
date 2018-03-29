@@ -135,6 +135,19 @@ class Strategy{
 		this.long        	= this.options.long; 
 		return new Promise( (resolve,reject)=>{
 			T.indicators.ultosc.indicator([this.sets.high, this.sets.low, this.sets.close], [this.short, this.medium, this.long], (err, res)=>{
+				resolve(res);
+				reject(err);
+			});
+		});
+	};
+	vosc(sets, options){
+		//Ultimate Oscillator
+		this.sets = sets;
+		this.options 		= options;
+		this.short        	= this.options.short;
+		this.long        	= this.options.long; 
+		return new Promise( (resolve,reject)=>{
+			T.indicators.vosc.indicator([this.sets.volume], [this.short, this.long], (err, res)=>{
 				console.log(res);
 				resolve(res);
 				reject(err);
