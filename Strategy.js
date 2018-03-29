@@ -148,7 +148,6 @@ class Strategy{
 		this.long        	= this.options.long; 
 		return new Promise( (resolve,reject)=>{
 			T.indicators.vosc.indicator([this.sets.volume], [this.short, this.long], (err, res)=>{
-				console.log(res);
 				resolve(res);
 				reject(err);
 			});

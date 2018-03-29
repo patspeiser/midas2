@@ -88,6 +88,7 @@ class Decision {
 			return Promise.all(Object.values(s.strategies)).then( (data)=>{
 				s.data = data;
 				buffer.insert(s);
+				return data;
 			});	
 		})).then(function(data){
 			/*

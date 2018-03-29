@@ -24,6 +24,8 @@ class Gdax {
 		this.processBuffer  	= new Process(this, this.processStream,  1000 * 10);
 		this.updateAccounts		= new Process(this, this.updateAccounts, 1000 * 5 );
 		this.determine     		= new Process(this, this.determine, 1000 * 5);
+		//wash determinations.
+		//rename determine / evaluate
 		// this.infolog 			= new Process(this, this.infolog, 1000 * 15);
 	};
 	ingestStream(){
