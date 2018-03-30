@@ -110,7 +110,6 @@ class A{
 	run(){
 		this.set = this.getProductSetById(0);
 		if(this.set){
-			console.log(this.set);
 			this.adx 	= this.getStrategyByName('adx', this.set)[0];
 			this.ultOsc = this.getStrategyByName('ultOsc', this.set)[0];
 			this.cci    = this.getStrategyByName('cci', this.set)[0];

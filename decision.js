@@ -11,6 +11,7 @@ class Decision {
 	constructor(){};
 	evaluate(buffer){
 		this.buffer = buffer;
+		this.runAlgo();
 		this.buffer.clear();
 		return new Promise( (resolve, reject)=>{
 			this.interval = {amount: 180, type: 'minutes'};
@@ -18,10 +19,13 @@ class Decision {
 			return this.getProducts(this.interval, this.products)
 			.then( prods=>{
 				if(prods){
-					this.runStrats(this.buffer, prods, 5);
+					this.runStrats(this.buffer, prods, 3);
 				};
 			});
 		});
+	};
+	runAlgo(data){
+		this.strats = this.buffer.chain().data();
 	};
 	runStrats(buffer, prods, period){
 		var buffer = buffer; 

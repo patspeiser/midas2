@@ -21,12 +21,12 @@ class Gdax {
 	};
 	init(){
 		this.ingestStream();
-		this.processBuffer  	= new Process(this, this.processStream,  1000 * 10);
+		this.processBuffer  	= new Process(this, this.processStream,  1000 * 5);
 		this.updateAccounts		= new Process(this, this.updateAccounts, 1000 * 5 );
-		this.determine     		= new Process(this, this.determine, 1000 * 5);
+		this.evaluate    		= new Process(this, this.evaluate, 1000 * 5);
 		//wash determinations.
 		//rename determine / evaluate
-		// this.infolog 			= new Process(this, this.infolog, 1000 * 15);
+		this.infolog 			= new Process(this, this.infolog, 1000 * 30);
 	};
 	ingestStream(){
 		this.socket.on('message', data =>{
@@ -42,6 +42,10 @@ class Gdax {
 	processStream(){
 		this.buffers.processStream(this.buffers);
 	};
+	evaluate(){
+		this.decision.evaluate(this.buffers.strats);
+		return;
+	}
 	determine(){
 		this.minTradeTime = 1000 * 60 * 20;
 		this.maxTradeTime = this.minTradeTime * 3;

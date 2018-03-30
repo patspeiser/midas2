@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "start:dev": "cross-env SITE_ENVIRONMENT=dev cross-env PORT=3037 cross-env nodemon server.js",
-    "start:prod": "cross-env SITE_ENVIRONMENT=prod cross-env PORT=3037 cross-env nodemon server.js",
+    "start:prod": "cross-env SITE_ENVIRONMENT=prod cross-env PORT=3037 cross-env nodemon --max_old_space_size=3072 server.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "",
