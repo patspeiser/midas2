@@ -11,7 +11,6 @@ class Decision {
 	constructor(){};
 	evaluate(buffer){
 		this.buffer = buffer;
-		this.runAlgo();
 		this.buffer.clear();
 		return new Promise( (resolve, reject)=>{
 			this.interval = {amount: 180, type: 'minutes'};
@@ -19,13 +18,61 @@ class Decision {
 			return this.getProducts(this.interval, this.products)
 			.then( prods=>{
 				if(prods){
-					this.runStrats(this.buffer, prods, 3);
+					this.runStrats(this.buffer, prods, 4);
 				};
 			});
 		});
 	};
-	runAlgo(data){
-		this.strats = this.buffer.chain().data();
+	getProductSetById(id){
+		this.id  = id;
+		return this.data[this.id];
+	};
+	getStrategySetById(id, set){
+		this.id  = id;
+		this.set = set; 
+		if(this.set && this.set.data[this.id]){
+			return this.set.data[this.id];
+		}
+	};
+	getStrategyByName(name, set){
+		this.name 		= name;
+		this.set 		= set;
+		if(this.set && Object.keys(this.set.strategies).indexOf(this.name) >= 0){
+			this.index = Object.keys(this.set.strategies).indexOf(this.name);
+			return this.getStrategySetById(this.index, this.set);
+		};
+	};
+	runAlgo(buffer){
+		this.buffer = buffer;
+		if(this.buffer){
+			this.strats = this.buffer.strats.chain().data();
+			if(this.strats){
+				this.strats.forEach(strat =>{
+					if(strat){
+						console.log(chalk.green(strat.product_id));
+						this.strat 	= strat;
+						this.atr 	= this.getStrategyByName('atr', this.strat);
+						this.rsi 	= this.getStrategyByName('rsi', this.strat);
+						this.ultOsc = this.getStrategyByName('ultOsc', this.strat);
+						this.volOsc = this.getStrategyByName('volOsc', this.strat);
+						this.volume = this.strat.sets.volume;	
+						if(this.ultOsc && this.ultOsc[0]){
+							if(this.ultOsc[0][this.ultOsc[0].length-1] > 50){
+								console.log('overbought');
+								console.log('---->ultOsc');
+								if(this.rsi[0][this.rsi[0].length-1] > 50){
+									console.log('---->rsi');
+								};
+							};
+							if(this.ultOsc[0][this.ultOsc[0].length-1] < 20){
+								//oversold == look to buy
+								console.log(chalk.red('OVERSOLD'))
+							};
+						};
+					};
+				});
+			};
+		};
 	};
 	runStrats(buffer, prods, period){
 		var buffer = buffer; 
@@ -73,12 +120,12 @@ class Decision {
 						bbands: this.strat.bbands(	this.priceSets, {period: period, stdDev: 1}),
 						cci: 	this.strat.cci(		this.priceSets, {period: period}),
 						ema: 	this.strat.ema(		this.priceSets, {period: period}),
-						macd: 	this.strat.macd(	this.priceSets, {short: period *5, long: period*7, period: period*11}),
-						rsi: 	this.strat.rsi(		this.priceSets, {period: period * 20}),
+						macd: 	this.strat.macd(	this.priceSets, {short: 5, long: 10, period: 50}),
+						rsi: 	this.strat.rsi(		this.priceSets, {period: Math.pow(period, period)}),
 						sma:    this.strat.sma(		this.priceSets, {period: period}),
 						stoch: 	this.strat.stoch(	this.priceSets, {kPeriod: 5, kSlowingPeriod: 3 , dPeriod: 3}),
 						ultOsc: this.strat.ultOsc(	this.priceSets, {short: period, medium: period * 2 , long: period * 3}),
-						vosc:   this.strat.vosc( 	this.priceSets, {short: period, long: period*3}),
+						vosc:   this.strat.vosc( 	this.priceSets, {short: period, long: period*5}),
 					};
 					this.strats.push({
 						product_id: this.product_id,
@@ -157,7 +204,7 @@ class Decision {
 				}
 			};
 		};
-		console.log(chalk.gray(this.candles.length));
+		//console.log(chalk.gray(this.candles.length));
 		return this.candles;	
 	};
 	getProducts(interval, productList){

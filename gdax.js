@@ -43,6 +43,7 @@ class Gdax {
 		this.buffers.processStream(this.buffers);
 	};
 	evaluate(){
+		this.decision.runAlgo(this.buffers);
 		this.decision.evaluate(this.buffers.strats);
 		return;
 	}
