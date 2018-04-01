@@ -48,8 +48,8 @@ class Decision {
 			this.strats = this.buffer.strats.chain().data();
 			if(this.strats){
 				this.strats.forEach(strat =>{
-					if(strat){
-						console.log(chalk.green(strat.product_id));
+					if(strat && strat.product_id === 'BTC-USD'){
+						console.log(chalk.magenta(strat.product_id));
 						this.strat 	= strat;
 						this.atr 	= this.getStrategyByName('atr', this.strat);
 						this.rsi 	= this.getStrategyByName('rsi', this.strat);
@@ -57,16 +57,33 @@ class Decision {
 						this.volOsc = this.getStrategyByName('volOsc', this.strat);
 						this.volume = this.strat.sets.volume;	
 						if(this.ultOsc && this.ultOsc[0]){
-							if(this.ultOsc[0][this.ultOsc[0].length-1] > 50){
-								console.log('overbought');
-								console.log('---->ultOsc');
-								if(this.rsi[0][this.rsi[0].length-1] > 50){
-									console.log('---->rsi');
+							//SELL
+							if(this.ultOsc[0][this.ultOsc[0].length-1] > 70){
+								console.log(chalk.green('overbought'));
+								console.log(chalk.green('---->ultOsc'));
+								if(this.rsi[0][this.rsi[0].length-1] > 80){
+									console.log(chalk.green('---->rsi'));
+									if(this.cci[0][this.cci[0].length-1] < -100){
+										console.log(chalk.green('---->cci'));
+										if(this.adx[0][this.adx[0].length-1] > 70){
+											console.log(chalk.green('---->adx'));
+										};
+									};
 								};
 							};
-							if(this.ultOsc[0][this.ultOsc[0].length-1] < 20){
-								//oversold == look to buy
-								console.log(chalk.red('OVERSOLD'))
+							//BUY
+							if(this.ultOsc[0][this.ultOsc[0].length-1] < 30){
+								console.log(chalk.red('oversold'));
+								console.log(chalk.red('---->ultOsc'));
+								if(this.rsi[0][this.rsi[0].length-1] < 20){
+									console.log(chalk.red('---->rsi'));
+									if(this.cci[0][this.cci[0].length-1] > 100){
+										console.log(chalk.red('---->cci'));
+										if(this.adx[0][this.adx[0].length-1] > 70){
+											console.log(chalk.green('---->adx'));
+										};
+									};
+								};
 							};
 						};
 					};
@@ -115,17 +132,17 @@ class Decision {
 						volume: this.volumes
 					};
 					this.strategies = {
-						adx: 	this.strat.adx(		this.priceSets, {period: period}),
+						adx: 	this.strat.adx(		this.priceSets, {period: period*3}),
 						atr: 	this.strat.atr(		this.priceSets, {period: period}),
 						bbands: this.strat.bbands(	this.priceSets, {period: period, stdDev: 1}),
 						cci: 	this.strat.cci(		this.priceSets, {period: period}),
 						ema: 	this.strat.ema(		this.priceSets, {period: period}),
-						macd: 	this.strat.macd(	this.priceSets, {short: 5, long: 10, period: 50}),
+						macd: 	this.strat.macd(	this.priceSets, {short: period*12, long: period*26, period: period}),
 						rsi: 	this.strat.rsi(		this.priceSets, {period: Math.pow(period, period)}),
 						sma:    this.strat.sma(		this.priceSets, {period: period}),
 						stoch: 	this.strat.stoch(	this.priceSets, {kPeriod: 5, kSlowingPeriod: 3 , dPeriod: 3}),
 						ultOsc: this.strat.ultOsc(	this.priceSets, {short: period, medium: period * 2 , long: period * 3}),
-						vosc:   this.strat.vosc( 	this.priceSets, {short: period, long: period*5}),
+						vosc:   this.strat.vosc( 	this.priceSets, {short: period, long: period*3}),
 					};
 					this.strats.push({
 						product_id: this.product_id,

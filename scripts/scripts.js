@@ -114,7 +114,7 @@ class A{
 			this.ultOsc = this.getStrategyByName('ultOsc', this.set)[0];
 			this.cci    = this.getStrategyByName('cci', this.set)[0];
 			this.rsi    = this.getStrategyByName('rsi', this.set)[0];
-			this.macd   = this.getStrategyByName('macd', this.set)[0];
+			this.macd   = this.getStrategyByName('macd', this.set);
 			this.vosc   = this.getStrategyByName('vosc', this.set)[0];	
 			//adx
 			_adxChart.data.labels   = Object.keys(this.adx);
@@ -149,11 +149,23 @@ class A{
 			_rsiChart.update({duration: 0});
 			
 			//macd
-			_macdChart.data.labels = Object.keys(this.macd);
+			_macdChart.data.labels = Object.keys(this.macd[0]);
 			_macdChart.data.datasets = [{
 				label: 'macd',
-				data : this.macd
+				data : this.macd[0],
+				borderColor: 'rgba(0, 0, 0, 0.1)'
+			},{
+				label: 'macd signal',
+				data : this.macd[1],
+				borderColor: 'rgba(0, 100, 0, 0.1)'
 			}];
+			/*{
+				label: 'macd histo',
+				data : this.macd[2],
+				borderColor: 'rgba(0, 0, 100, 0.1)'
+			}];
+			*/
+			/*
 			this.macdMin = 0
 			this.macdMax = 0
 			for (let i = 0; i< this.macd.length-1; i++){
@@ -165,10 +177,10 @@ class A{
 				} else if (this.macd[i] < this.macdMin){
 					this.macdMin = this.macd[i];
 				};
-				
 			};
 			_macdChart.options.scales.yAxes[0].ticks.min = this.macdMin;
 			_macdChart.options.scales.yAxes[0].ticks.max = this.macdMax;
+			*/
 			_macdChart.update({duration: 0});
 
 			//vosc
