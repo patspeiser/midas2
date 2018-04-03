@@ -4,7 +4,8 @@ const moment = require('moment');
 const Op = require(path.join(__dirname, 'db')).Op;
 const Ticker = require(path.join(__dirname,'db')).models.Ticker;
 const Transaction = require(path.join(__dirname,'db')).models.Transaction;
-const Strategy = require(path.join(__dirname, 'Strategy'));
+const Strategy 	= require(path.join(__dirname, 'Strategy'));
+const Model 	= require(path.join(__dirname, 'Db')).models;
 const T = require('tulind');
 
 class Decision {
@@ -49,42 +50,79 @@ class Decision {
 			if(this.strats){
 				this.strats.forEach(strat =>{
 					if(strat && strat.product_id === 'BTC-USD'){
-						console.log(chalk.magenta(strat.product_id));
+						//console.log(chalk.magenta(strat.product_id));
 						this.strat 	= strat;
 						this.atr 	= this.getStrategyByName('atr', this.strat);
+						this.adx	= this.getStrategyByName('adx', this.strat);
+						this.cci	= this.getStrategyByName('cci', this.strat);
 						this.rsi 	= this.getStrategyByName('rsi', this.strat);
 						this.ultOsc = this.getStrategyByName('ultOsc', this.strat);
-						this.volOsc = this.getStrategyByName('volOsc', this.strat);
-						this.volume = this.strat.sets.volume;	
+						this.vosc 	= this.getStrategyByName('vosc', this.strat);
+						this.vema 	= this.getStrategyByName('vema', this.strat);
+						this.volume = this.strat.sets.volume;
+
+						this.score = 0;
+
+						this._atr 		= this.atr[0][this.atr[0].length-1];
+						this._adx  		= this.adx[0][this.adx[0].length-1]; 
+						this._cci		= this.cci[0][this.cci[0].length-1];
+						this._rsi		= this.rsi[0][this.rsi[0].length-1];
+						this._ultOsc	= this.ultOsc[0][this.ultOsc[0].length-1];
+						this._vosc		= this.vosc[0][this.vosc[0].length-1];
+						this._vema		= this.vema[0][this.vema[0].length-1];
+						this._volume	= this.strat.sets.volume[this.strat.sets.volume.length-1] 
+						
+						console.log('#', this._atr, this._adx, this._cci, this._rsi, this._ultOsc, this._vosc, this._vema, this._volume);
 						if(this.ultOsc && this.ultOsc[0]){
+							/*console.log(
+								this.ultOsc[0][this.ultOsc[0].length-1],
+								this.rsi[0][this.rsi[0].length-1],
+								this.cci[0][this.cci[0].length-1],
+								this.adx[0][this.adx[0].length-1]
+								);
 							//SELL
 							if(this.ultOsc[0][this.ultOsc[0].length-1] > 70){
-								console.log(chalk.green('overbought'));
+								console.log(chalk.green('overbought', strat.product_id));
 								console.log(chalk.green('---->ultOsc'));
-								if(this.rsi[0][this.rsi[0].length-1] > 80){
-									console.log(chalk.green('---->rsi'));
+								if(this.rsi[0][this.rsi[0].length-1] > 70){
+									console.log(chalk.green('------->rsi'));
 									if(this.cci[0][this.cci[0].length-1] < -100){
-										console.log(chalk.green('---->cci'));
-										if(this.adx[0][this.adx[0].length-1] > 70){
-											console.log(chalk.green('---->adx'));
+										console.log(chalk.green('---------->cci'));
+										if(this.adx[0][this.adx[0].length-1] > 30){
+											Model.Rec.create({
+												product_id: this.strat.product_id,
+												side: 'sell', 
+												price: this.strat.sets.allPrices[this.strat.sets.allPrices.length-1],
+												time: Date.now()
+											});
+											console.log(chalk.green('------------->adx'));
+											console.log('SELL SELL SELL');
 										};
 									};
 								};
 							};
 							//BUY
 							if(this.ultOsc[0][this.ultOsc[0].length-1] < 30){
-								console.log(chalk.red('oversold'));
+								console.log(chalk.red('oversold', strat.product_id));
 								console.log(chalk.red('---->ultOsc'));
-								if(this.rsi[0][this.rsi[0].length-1] < 20){
-									console.log(chalk.red('---->rsi'));
+								if(this.rsi[0][this.rsi[0].length-1] < 30){
+									console.log(chalk.red('------->rsi'));
 									if(this.cci[0][this.cci[0].length-1] > 100){
-										console.log(chalk.red('---->cci'));
-										if(this.adx[0][this.adx[0].length-1] > 70){
-											console.log(chalk.green('---->adx'));
+										console.log(chalk.red('---------->cci'));
+										if(this.adx[0][this.adx[0].length-1] > 30){
+											Model.Rec.create({
+												product_id: this.strat.product_id,
+												side: 'buy', 
+												price: this.strat.sets.allPrices[this.strat.sets.allPrices.length-1],
+												time: Date.now()
+											});
+											console.log(chalk.red('------------->adx'));
+											console.log('BUY BUY BUY');
 										};
 									};
 								};
 							};
+							*/
 						};
 					};
 				});
@@ -136,7 +174,8 @@ class Decision {
 						atr: 	this.strat.atr(		this.priceSets, {period: period}),
 						bbands: this.strat.bbands(	this.priceSets, {period: period, stdDev: 1}),
 						cci: 	this.strat.cci(		this.priceSets, {period: period}),
-						ema: 	this.strat.ema(		this.priceSets, {period: period}),
+						ema: 	this.strat.ema(		this.priceSets.allPrices, {period: period}),
+						vema: 	this.strat.ema(		this.priceSets.volume, {period: period}),
 						macd: 	this.strat.macd(	this.priceSets, {short: period*12, long: period*26, period: period}),
 						rsi: 	this.strat.rsi(		this.priceSets, {period: Math.pow(period, period)}),
 						sma:    this.strat.sma(		this.priceSets, {period: period}),

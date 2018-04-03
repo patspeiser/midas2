@@ -115,7 +115,14 @@ class A{
 			this.cci    = this.getStrategyByName('cci', this.set)[0];
 			this.rsi    = this.getStrategyByName('rsi', this.set)[0];
 			this.macd   = this.getStrategyByName('macd', this.set);
-			this.vosc   = this.getStrategyByName('vosc', this.set)[0];	
+			this.vosc   = this.getStrategyByName('vosc', this.set)[0];
+			this.vema   = this.getStrategyByName('vema', this.set)[0];
+			_volumeChart.data.datasets.push({
+				label: 'vema',
+				data: this.vema,
+				borderColor: 'rgba(0, 0, 100, 0.1)',
+				backgroundColor: 'rgba(0, 0, 100, 0.1)'
+			});		
 			//adx
 			_adxChart.data.labels   = Object.keys(this.adx);
 			_adxChart.data.datasets = [{

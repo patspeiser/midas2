@@ -39,6 +39,12 @@ const Transaction = db.define('transaction', {
 	time:           {type: db.Sequelize.STRING}, 
 	amount:         {type: db.Sequelize.FLOAT}, 
 });
+const Rec = db.define('rec', {
+	product_id: {type: db.Sequelize.STRING},
+	price: 		{type: db.Sequelize.FLOAT},
+	side: 		{type: db.Sequelize.STRING},
+	time: 		{type: db.Sequelize.STRING}
+});
 
 module.exports = {
 	db: db,
@@ -47,6 +53,7 @@ module.exports = {
 		Ticker:     Ticker,
 		ValidPrice: ValidPrice,
 		Account:    Account,
-		Transaction: Transaction
+		Transaction: Transaction,
+		Rec: Rec
 	}
 };

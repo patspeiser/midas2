@@ -62,13 +62,13 @@ class Strategy{
 			});
 		});
 	};
-	ema(sets, options){
+	ema(set, options){
 		//Exponential Moving Average
-		this.sets = sets;
+		this.set = set;
 		this.options = options;
 		this.period = this.options.period;
 		return new Promise( (resolve, reject)=>{
-			T.indicators.ema.indicator([this.sets.allPrices], [this.period], (err, res)=>{
+			T.indicators.ema.indicator([this.set], [this.period], (err, res)=>{
 				resolve(res);
 				reject(err);
 			});
