@@ -11,16 +11,37 @@ const T = require('tulind');
 class Decision {
 	constructor(){};
 	evaluate(buffer){
+		console.log("#");
 		this.buffer = buffer;
 		this.buffer.clear();
 		return new Promise( (resolve, reject)=>{
 			this.interval = {amount: 180, type: 'minutes'};
 			this.products = ['BTC-USD','BCH-USD','ETH-USD','LTC-USD']	
-			return this.getProducts(this.interval, this.products)
+			return this.getProducts(this.interval, this.products, false, 25000)
 			.then( prods=>{
 				if(prods){
 					this.runStrats(this.buffer, prods, 6);
 				};
+			});
+		});
+	};
+	historical(buffer){
+		console.log('@', this.interval);
+		this.interval = null;
+		console.log('&', this.interval);
+		this.buffer = buffer;
+		this.buffer.clear();
+		return new Promise( (resolve, reject)=>{
+			this.products = ['BTC-USD','BCH-USD','ETH-USD','LTC-USD'];	
+			return this.getProducts(null, this.products, true, 30000).then( (prods)=>{
+				if(prods){
+					console.log('got prods', prods[0].length, prods[1].length, prods[2].length, prods[3].length);
+					for (let i = 0; i < prods.length; i++){
+						if(prods[i][0].product_id === 'BTC-USD'){
+							//console.log('yerp');
+						};
+					};
+				};	
 			});
 		});
 	};
@@ -296,23 +317,39 @@ class Decision {
 		//console.log(chalk.gray(this.candles.length));
 		return this.candles;	
 	};
-	getProducts(interval, productList, raw){
+	getProducts(interval, productList, raw, limit){
 		this.promises = []; 
 		this.now = new Date();
 		this.raw = raw || false;
-		this.when = moment(this.now).subtract(interval.amount, interval.type).format();
+		this.limit = limit || 25000;
+		if(interval){
+			this.when = moment(this.now).subtract(interval.amount, interval.type).format();
+		} else {
+			this.when = undefined;
+		};
 		for(let i=0; i < productList.length; i++){
-			this.promise = Ticker.findAll({
-				where: { 
-					product_id: productList[i],
-					createdAt: {
-						[Op.gt]: this.when
-					} 
-				},
-				order: [['id', 'DESC']],
-				limit: 25000,
-				raw: this.raw
-			});
+			if(this.when){
+				this.promise = Ticker.findAll({
+					where: { 
+						product_id: productList[i],
+						createdAt: {
+							[Op.gt]: this.when
+						} 
+					},
+					order: [['id', 'DESC']],
+					limit: this.limit,
+					raw: this.raw
+				});
+			} else {
+				this.promise = Ticker.findAll({
+					where: {
+						product_id: productList[i]
+					},
+					order: [['id', 'DESC']],
+					limit: this.limit,
+					raw: this.raw
+				})
+			}
 			this.promises.push(this.promise);
 		};
 		return Promise.all(this.promises).then(function(data){

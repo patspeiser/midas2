@@ -45,6 +45,7 @@ class Gdax {
 	evaluate(){
 		this.decision.runAlgo(this.buffers);
 		this.decision.evaluate(this.buffers.strats);
+		this.decision.historical(this.buffers.strats);
 		return;
 	}
 	determine(){
