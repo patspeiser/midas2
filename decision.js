@@ -19,7 +19,7 @@ class Decision {
 			return this.getProducts(this.interval, this.products)
 			.then( prods=>{
 				if(prods){
-					this.runStrats(this.buffer, prods, 4);
+					this.runStrats(this.buffer, prods, 6);
 				};
 			});
 		});
@@ -49,7 +49,7 @@ class Decision {
 			this.strats = this.buffer.strats.chain().data();
 			if(this.strats){
 				this.strats.forEach(strat =>{
-					if(strat && strat.product_id === 'BTC-USD'){
+					//if(strat && strat.product_id === 'BTC-USD'){
 						//console.log(chalk.magenta(strat.product_id));
 						this.strat 	= strat;
 						this.atr 	= this.getStrategyByName('atr', this.strat);
@@ -60,19 +60,52 @@ class Decision {
 						this.vosc 	= this.getStrategyByName('vosc', this.strat);
 						this.vema 	= this.getStrategyByName('vema', this.strat);
 						this.volume = this.strat.sets.volume;
-
 						this.score = 0;
+						if(this.atr)
+							this._atr 		= this.atr[0][this.atr[0].length-1];
+						if(this.atr)
+							this._adx  		= this.adx[0][this.adx[0].length-1]; 
+						if(this.cci)
+							this._cci		= this.cci[0][this.cci[0].length-1];
+						if (this.rsi)
+							this._rsi		= this.rsi[0][this.rsi[0].length-1];
+						if(this.ultOsc)
+							this._ultOsc	= this.ultOsc[0][this.ultOsc[0].length-1];
+						if(this.vosc)
+							this._vosc		= this.vosc[0][this.vosc[0].length-1];
+						if(this.vema)
+							this._vema		= this.vema[0][this.vema[0].length-1];
+						if(this.strat.sets.volume)
+							this._volume	= this.strat.sets.volume[this.strat.sets.volume.length-1] 
+						//console.log(this._vema, this._volume, this._vosc, this._ultOsc);	
+						if(this._volume > this._vema * 1.35){
+							//console.log('#');
+							if(this._vosc > 20){
+								//console.log('###');
+								if(this._ultOsc > 70){
+									console.log(chalk.green("# SELL -> overbought", this.strat.product_id));
 
-						this._atr 		= this.atr[0][this.atr[0].length-1];
-						this._adx  		= this.adx[0][this.adx[0].length-1]; 
-						this._cci		= this.cci[0][this.cci[0].length-1];
-						this._rsi		= this.rsi[0][this.rsi[0].length-1];
-						this._ultOsc	= this.ultOsc[0][this.ultOsc[0].length-1];
-						this._vosc		= this.vosc[0][this.vosc[0].length-1];
-						this._vema		= this.vema[0][this.vema[0].length-1];
-						this._volume	= this.strat.sets.volume[this.strat.sets.volume.length-1] 
-						
-						console.log('#', this._atr, this._adx, this._cci, this._rsi, this._ultOsc, this._vosc, this._vema, this._volume);
+									Model.Rec.create({
+										product_id: this.strat.product_id,
+										side: 'sell', 
+										price: this.strat.sets.allPrices[this.strat.sets.allPrices.length-1],
+										time: Date.now()
+									});
+									
+								};
+								if(this._ultOsc < 30){
+									console.log(chalk.red('# BUY  -> over sold', this.strat.product_id));
+									Model.Rec.create({
+										product_id: this.strat.product_id,
+										side: 'buy', 
+										price: this.strat.sets.allPrices[this.strat.sets.allPrices.length-1],
+										time: Date.now()
+									});
+								}
+							}
+						}
+
+						//console.log('#', this._atr, this._adx, this._cci, this._rsi, this._ultOsc, this._vosc, this._vema, this._volume);
 						if(this.ultOsc && this.ultOsc[0]){
 							/*console.log(
 								this.ultOsc[0][this.ultOsc[0].length-1],
@@ -124,7 +157,7 @@ class Decision {
 							};
 							*/
 						};
-					};
+					//};
 				});
 			};
 		};
@@ -263,9 +296,10 @@ class Decision {
 		//console.log(chalk.gray(this.candles.length));
 		return this.candles;	
 	};
-	getProducts(interval, productList){
+	getProducts(interval, productList, raw){
 		this.promises = []; 
 		this.now = new Date();
+		this.raw = raw || false;
 		this.when = moment(this.now).subtract(interval.amount, interval.type).format();
 		for(let i=0; i < productList.length; i++){
 			this.promise = Ticker.findAll({
@@ -276,7 +310,8 @@ class Decision {
 					} 
 				},
 				order: [['id', 'DESC']],
-				limit: 10000
+				limit: 25000,
+				raw: this.raw
 			});
 			this.promises.push(this.promise);
 		};

@@ -10,6 +10,7 @@ const Process 	= require(path.join(__dirname, 'Process'));
 const Strategy 	= require(path.join(__dirname, 'Strategy'));
 const io 		= require(path.join(__dirname, 'Socket'));
 const Buffer = require(path.join(__dirname, 'Buffer'));
+const Historical 	= require(path.join(__dirname, 'Historical'));
 const port   	= process.env.PORT || 3037;
 
 class Server{
@@ -60,6 +61,7 @@ class Server{
 			this.buffers 	= buffers; 
 			this.io   		= new io(this.server, this.buffers).init();
 			this.gdax 		= new Gdax(this.buffers).init();
+			this.historical = new Historical().init();
 			this.routes 	= app.setRoutes();
 		});
 	};
