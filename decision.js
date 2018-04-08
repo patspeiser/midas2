@@ -15,9 +15,9 @@ class Decision {
 		this.buffer = buffer;
 		this.buffer.clear();
 		return new Promise( (resolve, reject)=>{
-			this.interval = {amount: 180, type: 'minutes'};
+			this.interval = {amount: 60*24*3, type: 'minutes'};
 			this.products = ['BTC-USD','BCH-USD','ETH-USD','LTC-USD']	
-			return this.getProducts(this.interval, this.products, false, 25000)
+			return this.getProducts(this.interval, this.products, false, 35000)
 			.then( prods=>{
 				if(prods){
 					this.runStrats(this.buffer, prods, 6);
@@ -26,9 +26,7 @@ class Decision {
 		});
 	};
 	historical(buffer){
-		console.log('@', this.interval);
 		this.interval = null;
-		console.log('&', this.interval);
 		this.buffer = buffer;
 		this.buffer.clear();
 		return new Promise( (resolve, reject)=>{
@@ -39,6 +37,15 @@ class Decision {
 					for (let i = 0; i < prods.length; i++){
 						if(prods[i][0].product_id === 'BTC-USD'){
 							//console.log('yerp');
+							this.product_id = prods[i][0].product_id; 
+							this.product = prods[i];
+							this.prices  = [];
+							this.period  = 6;
+							this.product.map( product =>{
+								this.prices.push(product.price);
+							});
+							this.candles = this.createCandles(this.product, this.period, this.product_id);
+							console.log('()', this.candles);
 						};
 					};
 				};	
@@ -186,12 +193,13 @@ class Decision {
 	runStrats(buffer, prods, period){
 		var buffer = buffer; 
 		this.prods = prods;
-		this.strats = []; 
+		this.strats = [];
 		this.prods.forEach(product=>{
-			this.period = period;
 			this.product = product.reverse();
+			this.period = period;
 			if(this.product && this.product.length > 0){
 				this.product_id = this.product[0].product_id;
+				console.log(this.product[0].time);
 				this.strat = new Strategy('gdax');
 				this.prices   = [];
 				this.product.map( product =>{
