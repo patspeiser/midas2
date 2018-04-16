@@ -22,7 +22,7 @@ class Socket {
 				if(this.strats){
 					this.io.emit('refreshChart', { strategies: this.strats});
 				}	
-			}, 2000);
+			}, 5000);
 		});
 	};
 };

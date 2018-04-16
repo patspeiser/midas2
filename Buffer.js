@@ -45,7 +45,13 @@ class Buffer{
 		if(this.events){
 			this.events.forEach( event =>{
 				Ticker.create(event).then( t =>{
-					this.messages.remove(event);
+					//console.log(event);
+					try {
+						//console.log(event);
+						this.messages.remove(event);
+					} catch(error) {
+						console.log(error);
+					}
 				});
 			});
 		};

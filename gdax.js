@@ -21,9 +21,10 @@ class Gdax {
 	};
 	init(){
 		this.ingestStream();
-		this.processBuffer  	= new Process(this, this.processStream,  1000 * 5);
+		this.processBuffer  	= new Process(this, this.processStream,  1000 * 10);
 		this.updateAccounts		= new Process(this, this.updateAccounts, 1000 * 5 );
-		this.evaluate    		= new Process(this, this.evaluate, 1000 * 15);
+		this.evaluate    		= new Process(this, this.evaluate, 1000 * 60 *  4);
+		//this.historical         = new Process(this, this.historical, 1000 * 5);
 		//wash determinations.
 		//rename determine / evaluate
 		//this.infolog 			= new Process(this, this.infolog, 1000 * 30);
@@ -46,6 +47,10 @@ class Gdax {
 		this.decision.runAlgo(this.buffers);
 		this.decision.evaluate(this.buffers.strats);
 		//this.decision.historical(this.buffers.strats);
+		return;
+	}
+	historical(){
+		this.decision.historical(this.buffers);
 		return;
 	}
 	determine(){

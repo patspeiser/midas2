@@ -1,7 +1,12 @@
 const Sequelize = require('sequelize');
 const Op = Sequelize.Op;
 const urlString = "postgres://postgres:postgres@localhost/midas2";
-const db = new Sequelize(process.env.DATABASE_URL || urlString, {logging: false});
+const db = new Sequelize(process.env.DATABASE_URL || urlString, {
+	logging: false,
+	pool: {
+		maxIdleTime: 30000
+	}
+});
 
 const Ticker = db.define('ticker', {
 	type:  			{type: db.Sequelize.STRING},
