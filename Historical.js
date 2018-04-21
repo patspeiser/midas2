@@ -167,6 +167,25 @@ class Historical {
 		//console.log(chalk.gray(this.candles.length));
 		return this.candles;	
 	};
+	getProductSetById(id){
+		this.id  = id;
+		return this.data[this.id];
+	};
+	getStrategySetById(id, set){
+		this.id  = id;
+		this.set = set; 
+		if(this.set && this.set.data[this.id]){
+			return this.set.data[this.id];
+		}
+	};
+	getStrategyByName(name, set){
+		this.name 		= name;
+		this.set 		= set;
+		if(this.set && Object.keys(this.set.strategies).indexOf(this.name) >= 0){
+			this.index = Object.keys(this.set.strategies).indexOf(this.name);
+			return this.getStrategySetById(this.index, this.set);
+		};
+	};
 };
 
 module.exports = Historical;

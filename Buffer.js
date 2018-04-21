@@ -13,11 +13,13 @@ class Buffer{
 	init(){
 		this.messages = 	this.buffer.addCollection('message');
 		this.strats   =		this.buffer.addCollection('strategies');
+		this.recs     =		this.buffer.addCollection('recs');
 		return new Promise( (resolve, reject)=>{
 			this.buffers = {
 				processStream   : this.processStream,
 				messages 		: this.messages,
-				strats   		: this.strats
+				strats   		: this.strats,
+				recs            : this.recs
 			};
 			resolve(this.buffers);
 			reject('errbufferinit');
@@ -56,35 +58,6 @@ class Buffer{
 			});
 		};
 	};
-	/*
-	processBuffer(buffers){
-		this.buffers = buffers;
-		this.collection = this.buffers.messages;
-		this.valids     = this.buffers.valids
-		if(this.collection && this.valids){
-			this.upperBound = 1.02;
-			this.lowerBound = .98;
-			this.events = this.collection.chain().data();
-			//this.validPrices = this.valids.chain().data();
-			this.events.forEach( event =>{
-				this.validPrices.map( (v)=>{
-					this.validPrice = v[event.product_id];
-					if(event && event.product_id && v && this.validPrice){
-						if(event.price < this.validPrice * this.upperBound && event.price > this.validPrice * this.lowerBound){
-							v[event.product_id] = event.price;
-							this.valids.update(v);
-							Ticker.create(event).then( (e)=>{
-								this.collection.remove(event);	
-							});
-						} else {
-							console.log(chalk.red('shitty price'), event.product_id, event.price);
-						};
-					};
-				});
-			});
-		};
-	};
-	*/
 };
 
 module.exports = Buffer;

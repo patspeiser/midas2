@@ -17,23 +17,43 @@ class Gdax {
 		this.products = ['BTC-USD','BCH-USD','ETH-USD','LTC-USD'];
 		this.socket = new gdax.WebsocketClient(this.products,config.websocketUrl,null,['match']);
 		this.client = new gdax.AuthenticatedClient(config.auth.apiKey, config.auth.apiSecret, config.auth.passphrase, config.baseUrl);
-		this.decision  = new Decision();
+		this.decision  = new Decision(this);
 	};
 	init(){
 		this.ingestStream();
-		this.processBuffer  	= new Process(this, this.processStream,  1000 * 10);
+		//this.processBuffer  	= new Process(this, this.processStream,  1000 * 10);
 		this.updateAccounts		= new Process(this, this.updateAccounts, 1000 * 5 );
-		this.evaluate    		= new Process(this, this.evaluate, 1000 * 60 *  4);
-		//this.historical         = new Process(this, this.historical, 1000 * 5);
+		this.evaluate    		= new Process(this, this.evaluate, 1000 * 10 *  1);
+		this.recs    		    = new Process(this, this.getRecs, 1000 * 1 *  5);
+		this.determine   		= new Process(this, this.determine, 1000 * 1 *  5);
+		//this.historical       = new Process(this, this.historical, 1000 * 5);
 		//wash determinations.
 		//rename determine / evaluate
 		//this.infolog 			= new Process(this, this.infolog, 1000 * 30);
+	};
+	getRecs(){
+		this.recs = this.buffers.recs.chain().data();
+		this.recs.forEach( (rec)=>{
+			if(rec){
+				this.rec = rec;
+				this.now = Date.now();
+				this.recTime = this.rec.time;
+				this.expireRecTime = 1000 * 1 * 5;
+				if(this.now - this.recTime > this.expireRecTime){
+					this.buffers.recs.remove(this.rec); 
+				};
+			};
+		})
+		if (this.recs){
+			console.log(chalk.gray(JSON.stringify(this.recs)));
+		};
 	};
 	ingestStream(){
 		this.socket.on('message', data =>{
 			if(data.type === 'match' && data.product_id && data.price){
 				//console.log(chalk.gray(JSON.stringify(data)));
-				this.buffers.messages.insert(data);	
+				Ticker.create(data);
+				//this.buffers.messages.insert(data);	
 			};
 		});
 		this.socket.on('error', err =>{
@@ -54,21 +74,19 @@ class Gdax {
 		return;
 	}
 	determine(){
+		this.recs = this.buffers.recs.chain().data();
+		console.log('####', chalk.cyan(this.recs));
 		this.minTradeTime = 1000 * 60 * 20;
 		this.maxTradeTime = this.minTradeTime * 3;
-		this.goalMultiplier = 1.005;
-		this.lossMultiplier = .98;
+		this.goalMultiplier = 1.01;
+		this.lossMultiplier = .99;
 		Transaction.findOne({
 			order: [['id', 'DESC']],
 			limit: 1
 		}).then( transaction =>{
 			this.transaction = transaction;
 			if(!this.transaction){
-				this.decision.evaluate(this.buffers.strats).then( (e)=>{
-					if(e){
-						//this.marketBuy(e);
-					}	
-				});
+				//this.marketBuy();
 			};
 			if(this.transaction){
 				this.side = this.transaction.side;
@@ -77,10 +95,9 @@ class Gdax {
 				this.qouteCurrency = this.product[0];
 				this.baseCurrency  = this.product[1];
 				if(this.side === 'sell'){
-					this.decision.evaluate(this.buffers.strats).then( (e)=>{
-						//this.marketBuy(e);	
-					});
+					//this.marketBuy();	
 				};
+
 				if(this.side === 'buy'){
 					Ticker.findOne({
 						where: {
@@ -122,7 +139,7 @@ class Gdax {
 				};
 			};	
 		});
-	};
+	}
 	marketBuy(rec){
 		this.rec = rec;
 		console.log(chalk.magenta(JSON.stringify(this.rec)));
@@ -160,7 +177,7 @@ class Gdax {
 		});
 	};
 	marketSell(product, price){
-		//price here is pointless in a market sell. just used to market a price in the 
+		//price here is pointless in a market sell. just used to mark a price in the 
 		//transaction table 
 		this.product = product;
 		this.currencyNeeded = this.product.split('-')[0]; 

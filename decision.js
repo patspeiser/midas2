@@ -9,7 +9,9 @@ const Model 	= require(path.join(__dirname, 'Db')).models;
 const T = require('tulind');
 
 class Decision {
-	constructor(){};
+	constructor(service){
+		this.gdax = service;
+	};
 	evaluate(buffer){
 		//* sorta prod
 		this.buffer = buffer;
@@ -20,7 +22,7 @@ class Decision {
 			return this.getProducts(this.interval, this.products, false, 50000)
 			.then( prods=>{
 				if(prods){
-					this.runStrats(this.buffer, prods, 7);
+					this.runStrats(this.buffer, prods, 5);
 				};
 			});
 		});
@@ -77,11 +79,11 @@ class Decision {
 		if(this.buffer){
 			this.strats = this.buffer.strats.chain().data();
 			if(this.strats){
-				this.historical(this.strats);
+				//this.historical(this.strats);
 				this.strats.forEach(strat =>{
+					this.strat 	= strat;
 					//if(strat && strat.product_id === 'BTC-USD'){
 						//console.log(chalk.magenta(strat.product_id));
-						this.strat 	= strat;
 						this.atr 	= this.getStrategyByName('atr', this.strat);
 						this.adx	= this.getStrategyByName('adx', this.strat);
 						this.cci	= this.getStrategyByName('cci', this.strat);
@@ -115,25 +117,48 @@ class Decision {
 						if(this.strat.sets.volume){
 							this._volume	= this.strat.sets.volume[this.strat.sets.volume.length-1] 
 						};
+
 						if(this._volume > this._vema * 1.4){
+							//this._vosc = 21;
+							//this._ultOsc = 71;
 							if(this._vosc > 20){
 								if(this._ultOsc > 70){
-									console.log(chalk.green("# SELL -> overbought", this.strat.product_id, this.strat.sets.allPrices[this.strat.sets.allPrices.length-1]));
-									Model.Rec.create({
+									//market sell here
+									this.sellEvent = {
 										product_id: this.strat.product_id,
 										side: 'sell', 
 										price: this.strat.sets.allPrices[this.strat.sets.allPrices.length-1],
 										time: Date.now()
+									};
+									this.recs = this.buffer.recs.chain().data();
+									this.recs.forEach( rec =>{
+										if (rec.product_id === this.sellEvent.product_id){
+											this.buffer.recs.remove(rec);
+											this.buffer.recs.insert(this.sellEvent);
+										}
 									});
+									this.buffer.recs.insert(this.sellEvent);
+									console.log(chalk.green("# SELL -> overbought", this.strat.product_id, this.strat.sets.allPrices[this.strat.sets.allPrices.length-1]));
+									Model.Rec.create(this.sellEvent);
 								};
 								if(this._ultOsc < 30){
-									console.log(chalk.red('# BUY  -> over sold', this.strat.product_id, this.strat.sets.allPrices[this.strat.sets.allPrices.length-1]));
-									Model.Rec.create({
+									//market buy
+									this.buyEvent = {
 										product_id: this.strat.product_id,
 										side: 'buy', 
 										price: this.strat.sets.allPrices[this.strat.sets.allPrices.length-1],
 										time: Date.now()
+									};
+									this.recs = this.buffer.recs.chain().data();
+									this.recs.forEach( rec =>{
+										if (rec.product_id === this.buyEvent.product_id){
+											this.buffer.recs.remove(rec);
+											this.buffer.recs.insert(this.sellEvent);
+										}
 									});
+									this.buffer.recs.insert(this.buyEvent);
+									console.log(chalk.red('# BUY  -> over sold', this.strat.product_id, this.strat.sets.allPrices[this.strat.sets.allPrices.length-1]));
+									Model.Rec.create(this.buyEvent);
 								};
 							};
 						};

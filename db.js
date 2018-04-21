@@ -4,7 +4,9 @@ const urlString = "postgres://postgres:postgres@localhost/midas2";
 const db = new Sequelize(process.env.DATABASE_URL || urlString, {
 	logging: false,
 	pool: {
-		maxIdleTime: 60000
+		maxIdleTime: 60000,
+		max: 30,
+		acquire: 60000
 	}
 });
 
