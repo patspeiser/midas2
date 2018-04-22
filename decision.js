@@ -117,7 +117,22 @@ class Decision {
 						if(this.strat.sets.volume){
 							this._volume	= this.strat.sets.volume[this.strat.sets.volume.length-1] 
 						};
-
+						/*
+						for (let i = 0; i < 4; i++){
+							this.buffer.recs.insert({
+								product_id: this.strat.product_id,
+								side: 'sell', 
+								price: this.strat.sets.allPrices[this.strat.sets.allPrices.length-1],
+								time: Date.now()
+							});
+							this.buffer.recs.insert({
+								product_id: this.strat.product_id,
+								side: 'buy', 
+								price: this.strat.sets.allPrices[this.strat.sets.allPrices.length-1],
+								time: Date.now()
+							});
+						}
+						*/
 						if(this._volume > this._vema * 1.4){
 							//this._vosc = 21;
 							//this._ultOsc = 71;
@@ -137,7 +152,7 @@ class Decision {
 											this.buffer.recs.insert(this.sellEvent);
 										}
 									});
-									this.buffer.recs.insert(this.sellEvent);
+									this.buffer.recs.insert(this.sellEvent) || this.buffer.recs.update(this.sellEvent);
 									console.log(chalk.green("# SELL -> overbought", this.strat.product_id, this.strat.sets.allPrices[this.strat.sets.allPrices.length-1]));
 									Model.Rec.create(this.sellEvent);
 								};
@@ -156,7 +171,7 @@ class Decision {
 											this.buffer.recs.insert(this.sellEvent);
 										}
 									});
-									this.buffer.recs.insert(this.buyEvent);
+									this.buffer.recs.insert(this.buyEvent) || this.buffer.recs.update(this.buyEvent);
 									console.log(chalk.red('# BUY  -> over sold', this.strat.product_id, this.strat.sets.allPrices[this.strat.sets.allPrices.length-1]));
 									Model.Rec.create(this.buyEvent);
 								};
@@ -232,7 +247,7 @@ class Decision {
 		});
 		return Promise.all(this.strats.map( s =>{
 			return Promise.all(Object.values(s.strategies)).then( (data)=>{
-				console.log(data.length)
+				//console.log(data.length)
 				s.data = data;
 				buffer.insert(s);
 				return data;
