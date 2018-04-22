@@ -21,12 +21,13 @@ class Gdax {
 	};
 	init(){
 		this.ingestStream();
-		//this.processBuffer  	= new Process(this, this.processStream,  1000 * 10);
-		this.updateAccounts		= new Process(this, this.updateAccounts, 1000 * 5 );
-		this.evaluate    		= new Process(this, this.evaluate, 1000 * 60 *  5);
-		this.recs    		    = new Process(this, this.getRecs, 1000 * 15 * 1);
-		this.determine   		= new Process(this, this.determine, 1000 * 60 *  1);
-		//this.historical       = new Process(this, this.historical, 1000 * 5);
+		//this.processBuffer  	= new Process(this, this.processStream,  	1000 * 10);
+		this.updateAccounts		= new Process(this, this.updateAccounts, 	1000 * 5 );
+		this.evaluate    		= new Process(this, this.evaluate, 			1000 * 60 *  1);
+		this.getRecs    		= new Process(this, this.getRecs, 			1000 * 15 * 1);
+		this.determine   		= new Process(this, this.determine, 		1000 * 60 *  1);
+		this.runAlgo   		    = new Process(this, this.runAlgo, 			1000 * 30 *  1);
+		//this.historical       = new Process(this, this.historical, 		1000 * 5);
 		//wash determinations.
 		//rename determine / evaluate
 		//this.infolog 			= new Process(this, this.infolog, 1000 * 30);
@@ -44,7 +45,7 @@ class Gdax {
 				};
 			};
 		})
-		if (this.recs){
+		if (this.recs && this.recs.length > 0){
 			console.log(chalk.gray(JSON.stringify(this.recs)));
 		};
 	};
@@ -64,10 +65,11 @@ class Gdax {
 		this.buffers.processStream(this.buffers);
 	};
 	evaluate(){
-		this.decision.runAlgo(this.buffers);
-		this.decision.evaluate(this.buffers.strats);
-		//this.decision.historical(this.buffers.strats);
+		this.decision.evaluate(this.buffers);
 		return;
+	}
+	runAlgo(){
+		this.decision.runAlgo(this.buffers);
 	}
 	historical(){
 		this.decision.historical(this.buffers);
@@ -117,7 +119,7 @@ class Gdax {
 					if(this.recs.length > 0){
 						if(this.newestBuyRec){
 							console.log(chalk.red(this.newestBuyRec.product_id, this.newestBuyRec.price));
-							//this.marketBuy(this.newestBuyRec.product_id, this.newestBuyRec.price);
+							this.marketBuy(this.newestBuyRec.product_id, this.newestBuyRec.price);
 						};
 					};
 				};
@@ -130,7 +132,7 @@ class Gdax {
 					if(this.side === 'sell'){
 						if(this.recs.length > 0 && this.newestBuyRec){
 							console.log(chalk.red(this.newestBuyRec.product_id, this.newestBuyRec.price));
-							//this.marketBuy(this.newestBuyRec.product_id, this.newestBuyRec.price);
+							this.marketBuy(this.newestBuyRec.product_id, this.newestBuyRec.price);
 						};
 					};
 
@@ -146,13 +148,13 @@ class Gdax {
 							if(this.ticker && this.transaction){
 								if (this.transaction.product_id === this.newestSellRec.product_id){
 									console.log(chalk.green(this.transaction.product_id, this.ticker.price));
-									//this.marketSell(this.transaction.product_id, this.ticker.price);
+									this.marketSell(this.transaction.product_id, this.ticker.price);
 								} else {
 									this.recs.forEach( rec =>{
 										if(rec.product_id === this.transaction.product_id){
 											if(rec.side === 'sell'){
 												console.log(chalk.green(this.transaction.product_id, this.ticker.price));
-												//this.marketSell(this.transaction.product_id, this.ticker.price);
+												this.marketSell(this.transaction.product_id, this.ticker.price);
 											};
 										};
 									});
@@ -215,6 +217,7 @@ class Gdax {
 					size: this.account.available
 				}	
 				console.log(chalk.magenta(JSON.stringify(this.orderParams)));
+				
 				this.client.placeOrder(this.orderParams, (err, res, data)=>{
 					if (err){
 						console.log('err', err);

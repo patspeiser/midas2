@@ -13,15 +13,17 @@ class Decision {
 		this.gdax = service;
 	};
 	evaluate(buffer){
+		console.log('#evaluate');
 		//* sorta prod
 		this.buffer = buffer;
-		this.buffer.clear();
+		this.buffer.strats.clear();
 		return new Promise( (resolve, reject)=>{
 			this.interval = {amount: 60*4, type: 'minutes'};
 			this.products = ['BTC-USD','BCH-USD', 'ETH-USD','LTC-USD'];	
 			return this.getProducts(this.interval, this.products, false, 50000)
 			.then( prods=>{
 				if(prods){
+					//console.log(buffer);
 					this.runStrats(this.buffer, prods, 5);
 				};
 			});
@@ -75,6 +77,7 @@ class Decision {
 		};
 	};
 	runAlgo(buffer){
+		console.log('#runalgo');
 		this.buffer = buffer;
 		if(this.buffer){
 			this.strats = this.buffer.strats.chain().data();
@@ -183,7 +186,9 @@ class Decision {
 		};
 	};
 	runStrats(buffer, prods, period){
-		var buffer = buffer; 
+		console.log('#runstrats')
+		var buffer = buffer.strats;
+		//console.log('-------',buffer); 
 		this.prods = prods;
 		this.strats = [];
 		this.prods.forEach(product=>{
@@ -247,7 +252,6 @@ class Decision {
 		});
 		return Promise.all(this.strats.map( s =>{
 			return Promise.all(Object.values(s.strategies)).then( (data)=>{
-				//console.log(data.length)
 				s.data = data;
 				buffer.insert(s);
 				return data;
@@ -263,6 +267,7 @@ class Decision {
 		});
 	};
 	createCandles(set, period, id){
+		console.log('#createcandles');
 		this.set = set;
 		this.period = period;
 		this.candles = [];
