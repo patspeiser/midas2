@@ -23,7 +23,6 @@ class Decision {
 			return this.getProducts(this.interval, this.products, false, 50000)
 			.then( prods=>{
 				if(prods){
-					//console.log(buffer);
 					this.runStrats(this.buffer, prods, 5);
 				};
 			});
@@ -77,10 +76,10 @@ class Decision {
 		};
 	};
 	runAlgo(buffer){
-		console.log('#runalgo');
 		this.buffer = buffer;
 		if(this.buffer){
-			this.strats = this.buffer.strats.chain().data();
+			this.strats = this.buffer.strats.data;
+			console.log('numstrats', this.strats.length);
 			if(this.strats){
 				//this.historical(this.strats);
 				this.strats.forEach(strat =>{
@@ -135,10 +134,12 @@ class Decision {
 								time: Date.now()
 							});
 						}
+						/*
+						this._vema = 1.5;
+						this._vosc = 21;
+						this._ultOsc = 71;	
 						*/
 						if(this._volume > this._vema * 1.4){
-							//this._vosc = 21;
-							//this._ultOsc = 71;
 							if(this._vosc > 20){
 								if(this._ultOsc > 70){
 									//market sell here
@@ -149,13 +150,16 @@ class Decision {
 										time: Date.now()
 									};
 									this.recs = this.buffer.recs.chain().data();
-									this.recs.forEach( rec =>{
-										if (rec.product_id === this.sellEvent.product_id){
-											this.buffer.recs.remove(rec);
-											this.buffer.recs.insert(this.sellEvent);
-										}
-									});
-									this.buffer.recs.insert(this.sellEvent) || this.buffer.recs.update(this.sellEvent);
+									if(this.recs && this.recs.length > 0){
+										this.recs.forEach( rec =>{
+											if (rec.product_id === this.sellEvent.product_id){
+												this.buffer.recs.remove(rec);
+											}
+										});
+										this.buffer.recs.insert(this.sellEvent);
+									} else {
+										this.buffer.recs.insert(this.sellEvent);
+									}
 									console.log(chalk.green("# SELL -> overbought", this.strat.product_id, this.strat.sets.allPrices[this.strat.sets.allPrices.length-1]));
 									Model.Rec.create(this.sellEvent);
 								};
@@ -168,13 +172,17 @@ class Decision {
 										time: Date.now()
 									};
 									this.recs = this.buffer.recs.chain().data();
-									this.recs.forEach( rec =>{
-										if (rec.product_id === this.buyEvent.product_id){
-											this.buffer.recs.remove(rec);
-											this.buffer.recs.insert(this.sellEvent);
-										}
-									});
-									this.buffer.recs.insert(this.buyEvent) || this.buffer.recs.update(this.buyEvent);
+									if(this.recs && this.recs.length > 0){
+										this.recs.forEach( rec =>{
+											if (rec.product_id === this.buyEvent.product_id){
+												this.buffer.recs.remove(rec);
+											}
+											this.buffer.recs.insert(this.buyEvent);
+										});
+									} else {
+										this.buffers.recs.insert(this.buyEvent);
+									}
+									
 									console.log(chalk.red('# BUY  -> over sold', this.strat.product_id, this.strat.sets.allPrices[this.strat.sets.allPrices.length-1]));
 									Model.Rec.create(this.buyEvent);
 								};

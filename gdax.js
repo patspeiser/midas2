@@ -23,23 +23,23 @@ class Gdax {
 		this.ingestStream();
 		//this.processBuffer  	= new Process(this, this.processStream,  	1000 * 10);
 		this.updateAccounts		= new Process(this, this.updateAccounts, 	1000 * 5 );
-		this.evaluate    		= new Process(this, this.evaluate, 			1000 * 60 *  1);
+		this.evaluate    		= new Process(this, this.evaluate, 			1000 * 60 * 2);
+		this.determine   		= new Process(this, this.determine, 		1000 * 60 * 1);
 		this.getRecs    		= new Process(this, this.getRecs, 			1000 * 15 * 1);
-		this.determine   		= new Process(this, this.determine, 		1000 * 60 *  1);
-		this.runAlgo   		    = new Process(this, this.runAlgo, 			1000 * 30 *  1);
+		this.runAlgo   		    = new Process(this, this.runAlgo, 			1000 * 30 * 1);
 		//this.historical       = new Process(this, this.historical, 		1000 * 5);
 		//wash determinations.
 		//rename determine / evaluate
 		//this.infolog 			= new Process(this, this.infolog, 1000 * 30);
 	};
 	getRecs(){
-		this.recs = this.buffers.recs.chain().data();
+		this.recs = this.buffers.recs.data;
 		this.recs.forEach( (rec)=>{
 			if(rec){
 				this.rec = rec;
 				this.now = Date.now();
 				this.recTime = this.rec.time;
-				this.expireRecTime = 1000 * 1 * 5;
+				this.expireRecTime = 1000 * 60 * 5;
 				if(this.now - this.recTime > this.expireRecTime){
 					this.buffers.recs.remove(this.rec); 
 				};
@@ -77,8 +77,8 @@ class Gdax {
 	}
 	determine(){
 		this.recs = this.buffers.recs.chain().data();
+		console.log('#### determine', chalk.cyan(JSON.stringify(this.recs)));
 		if(this.recs && this.recs.length > 0){
-			console.log('####', chalk.cyan(JSON.stringify(this.recs)));
 			this.newestRecTime;
 			this.newestBuyRec;
 			this.newestSellRec;  
@@ -167,12 +167,14 @@ class Gdax {
 		}
 	};
 	marketBuy(product_id, price){
+		console.log('marketbuy', product_id, price);
 		this.product_id = this.rec.product_id;
 		this.price = price;
 		this.currencyNeeded = this.product_id.split('-')[1]; 
 		Account.findOne({where: {currency: this.currencyNeeded}})
 		.then( (account)=>{
 			this.account = account;
+			console.log(this.product_id && this.account && this.account.available);
 			if(this.product_id && this.account && this.account.available > .01){
 				this.tempSize = (this.account.available - (this.account.available * .003));
 				this.funds = this.roundDown(this.tempSize, 8);
@@ -182,6 +184,7 @@ class Gdax {
 					funds: this.funds, 
 					product_id: this.product_id,
 				};
+				
 				console.log(chalk.magenta(JSON.stringify(this.orderParams)));
 				this.client.placeOrder(this.orderParams, (err, res, data)=>{
 					if (err){
@@ -197,11 +200,11 @@ class Gdax {
 						});
 					};
 				});
-				
 			};
 		});
 	};
 	marketSell(product_id, price){
+		console.log('marketsell', product_id, price);
 		//price here is pointless in a market sell. just used to mark a price in the 
 		//transaction table 
 		this.product_id = product_id;
@@ -217,7 +220,6 @@ class Gdax {
 					size: this.account.available
 				}	
 				console.log(chalk.magenta(JSON.stringify(this.orderParams)));
-				
 				this.client.placeOrder(this.orderParams, (err, res, data)=>{
 					if (err){
 						console.log('err', err);
@@ -232,7 +234,6 @@ class Gdax {
 						});
 					};
 				});
-				
 			};
 		});
 	};
