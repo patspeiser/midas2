@@ -23,10 +23,10 @@ class Gdax {
 		this.ingestStream();
 		//this.processBuffer  	= new Process(this, this.processStream,  	1000 * 10);
 		this.updateAccounts		= new Process(this, this.updateAccounts, 	1000 * 5 );
-		this.evaluate    		= new Process(this, this.evaluate, 			1000 * 60 * 2);
+		this.evaluate    		= new Process(this, this.evaluate, 			1000 * 20 * 1);
 		this.determine   		= new Process(this, this.determine, 		1000 * 60 * 1);
 		this.getRecs    		= new Process(this, this.getRecs, 			1000 * 15 * 1);
-		this.runAlgo   		    = new Process(this, this.runAlgo, 			1000 * 30 * 1);
+		this.runAlgo   		    = new Process(this, this.runAlgo, 			1000 * 15 * 1);
 		//this.historical       = new Process(this, this.historical, 		1000 * 5);
 		//wash determinations.
 		//rename determine / evaluate
@@ -77,11 +77,11 @@ class Gdax {
 	}
 	determine(){
 		this.recs = this.buffers.recs.chain().data();
+		this.newestRecTime;
+		this.newestBuyRec;
+		this.newestSellRec; 
 		console.log('#### determine', chalk.cyan(JSON.stringify(this.recs)));
 		if(this.recs && this.recs.length > 0){
-			this.newestRecTime;
-			this.newestBuyRec;
-			this.newestSellRec;  
 			this.recs.forEach( rec =>{
 				if(!this.newestRecTime){
 					this.newestRecTime = rec.time;
@@ -103,27 +103,40 @@ class Gdax {
 					};
 				};
 			});
-			console.log(chalk.red(JSON.stringify(this.newestRec)));
-			console.log(chalk.red(JSON.stringify(this.newestBuyRec)));
-			console.log(chalk.red(JSON.stringify(this.newestSellRec)));
-			this.minTradeTime = 1000 * 60 * 20;
+		};
+		Transaction.findOne({
+			order: [['id', 'DESC']],
+			limit: 1
+		}).then( transaction =>{
+			this.transaction = transaction;
+			if(!this.transaction){
+				if(this.newestBuyRec){
+					console.log(chalk.red(this.newestBuyRec.product_id, this.newestBuyRec.price));
+					this.marketBuy(this.newestBuyRec.product_id, this.newestBuyRec.price, 'initial transaction');
+				};
+			};
+			console.log('newestRec', chalk.gray(JSON.stringify(this.newestRec)));
+			console.log('newestBuyRec', chalk.gray(JSON.stringify(this.newestBuyRec)));
+			console.log('newestSellRec', chalk.gray(JSON.stringify(this.newestSellRec)));
+			this.minTradeTime = 1000 * 60 * 60;
 			this.maxTradeTime = this.minTradeTime * 3;
 			this.goalMultiplier = 1.01;
 			this.lossMultiplier = .99;
-			Transaction.findOne({
-				order: [['id', 'DESC']],
-				limit: 1
-			}).then( transaction =>{
-				this.transaction = transaction;
-				if(!this.transaction){
-					if(this.recs.length > 0){
-						if(this.newestBuyRec){
-							console.log(chalk.red(this.newestBuyRec.product_id, this.newestBuyRec.price));
-							this.marketBuy(this.newestBuyRec.product_id, this.newestBuyRec.price);
-						};
-					};
-				};
-				if(this.transaction){
+			if(this.transaction){
+				console.log(chalk.yellow(Date.now(), this.transaction.time, Date.now() - this.transaction.time));
+				if((Date.now() - this.transaction.time) > this.maxTradeTime){
+					console.log(chalk.magenta('too long'));
+					return Ticker.findOne({
+						where: {
+							product_id: this.transaction.product_id
+						},
+						order: [['id', 'DESC']],
+						limit: 1
+					}).then( ticker =>{
+						this.ticker = ticker;
+						return this.marketSell(this.transaction.product_id, this.ticker.price, 'time met')
+					});
+				} else {
 					this.side = this.transaction.side;
 					this.pair = this.transaction.product_id;
 					this.product = this.pair.split('-');
@@ -132,10 +145,9 @@ class Gdax {
 					if(this.side === 'sell'){
 						if(this.recs.length > 0 && this.newestBuyRec){
 							console.log(chalk.red(this.newestBuyRec.product_id, this.newestBuyRec.price));
-							this.marketBuy(this.newestBuyRec.product_id, this.newestBuyRec.price);
+							this.marketBuy(this.newestBuyRec.product_id, this.newestBuyRec.price, 'rec buy');
 						};
 					};
-
 					if(this.side === 'buy'){
 						Ticker.findOne({
 							where: {
@@ -146,27 +158,34 @@ class Gdax {
 						}).then( ticker =>{
 							this.ticker = ticker;
 							if(this.ticker && this.transaction){
-								if (this.transaction.product_id === this.newestSellRec.product_id){
-									console.log(chalk.green(this.transaction.product_id, this.ticker.price));
-									this.marketSell(this.transaction.product_id, this.ticker.price);
+								if(this.ticker.price < this.transaction.price * this.lossMultiplier){
+									this.marketSell(this.transaction.product_id, this.ticker.price, 'loss percent');	
+								} else if (this.ticker.price > this.transaction.price * this.goalMultiplier){
+									this.marketSell(this.transaction.product_id, this.ticker.price, 'goal met');
 								} else {
-									this.recs.forEach( rec =>{
-										if(rec.product_id === this.transaction.product_id){
-											if(rec.side === 'sell'){
-												console.log(chalk.green(this.transaction.product_id, this.ticker.price));
-												this.marketSell(this.transaction.product_id, this.ticker.price);
+									if (this.transaction && this.newestSellRec && this.transaction.product_id === this.newestSellRec.product_id){
+										console.log(chalk.green(this.transaction.product_id, this.ticker.price));
+										this.marketSell(this.transaction.product_id, this.ticker.price, 'rec sell');
+									} else {
+										// ?
+										this.recs.forEach( rec =>{
+											if(rec.product_id === this.transaction.product_id){
+												if(rec.side === 'sell'){
+													console.log(chalk.green(this.transaction.product_id, this.ticker.price));
+													this.marketSell(this.transaction.product_id, this.ticker.price, 'idk');
+												};
 											};
-										};
-									});
-								};
+										});
+									};
+								}
 							};
 						});
-					};	
-				};
-			});
-		}
-	};
-	marketBuy(product_id, price){
+					};
+				}	
+			};
+		});
+	}
+marketBuy(product_id, price){
 		console.log('marketbuy', product_id, price);
 		this.product_id = this.rec.product_id;
 		this.price = price;
@@ -177,7 +196,7 @@ class Gdax {
 			console.log(this.product_id && this.account && this.account.available);
 			if(this.product_id && this.account && this.account.available > .01){
 				this.tempSize = (this.account.available - (this.account.available * .003));
-				this.funds = this.roundDown(this.tempSize, 8);
+				this.funds = this.roundDown(this.tempSize, 2);
 				this.orderParams = {
 					side: 'buy',
 					type: 'market',

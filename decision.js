@@ -177,10 +177,14 @@ class Decision {
 											if (rec.product_id === this.buyEvent.product_id){
 												this.buffer.recs.remove(rec);
 											}
-											this.buffer.recs.insert(this.buyEvent);
+											try {
+												this.buffer.recs.insert(this.buyEvent);
+											} catch (err){
+												console.log(err);
+											}
 										});
 									} else {
-										this.buffers.recs.insert(this.buyEvent);
+										this.buffer.recs.insert(this.buyEvent);
 									}
 									
 									console.log(chalk.red('# BUY  -> over sold', this.strat.product_id, this.strat.sets.allPrices[this.strat.sets.allPrices.length-1]));
