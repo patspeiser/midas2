@@ -78,31 +78,32 @@ class Gdax {
 	determine(){
 		this.recs = this.buffers.recs.chain().data();
 		this.newestRecTime;
+		this.newestRec;
 		this.newestBuyRec;
 		this.newestSellRec; 
 		console.log('#### determine', chalk.cyan(JSON.stringify(this.recs)));
 		if(this.recs && this.recs.length > 0){
-			this.recs.forEach( rec =>{
+			for(let i = 0; i < this.recs.length; i++){
 				if(!this.newestRecTime){
-					this.newestRecTime = rec.time;
-					this.newestRec = rec;
-					if(rec.side === 'buy'){
-						this.newestBuyRec = rec;
-					} else if (rec.side === 'sell'){
-						this.newestSellRec = rec;
+					this.newestRecTime = rec[i].time;
+					this.newestRec = rec[i];
+					if(rec[i].side === 'buy'){
+						this.newestBuyRec = rec[i];
+					} else if (rec[i].side === 'sell'){
+						this.newestSellRec = rec[i];
 					};
 				} else {
-					if(rec.time > this.newestRecTime){
-						this.newestRecTime = rec.time;
-						this.newestRec = rec;
-						if(rec.side ==='buy'){
-							this.newestBuyRec = rec;		
-						} else if (rec.side === 'sell'){
-							this.newestSellRec = rec;
+					if(rec[i].time > this.newestRecTime){
+						this.newestRecTime = rec[i].time;
+						this.newestRec = rec[i];
+						if(rec[i].side ==='buy'){
+							this.newestBuyRec = rec[i];		
+						} else if (rec[i].side === 'sell'){
+							this.newestSellRec = rec[i];
 						};
 					};
 				};
-			});
+			};
 		};
 		Transaction.findOne({
 			order: [['id', 'DESC']],
@@ -118,15 +119,16 @@ class Gdax {
 			console.log('newestRec', chalk.gray(JSON.stringify(this.newestRec)));
 			console.log('newestBuyRec', chalk.gray(JSON.stringify(this.newestBuyRec)));
 			console.log('newestSellRec', chalk.gray(JSON.stringify(this.newestSellRec)));
-			this.minTradeTime = 1000 * 60 * 60;
+			this.minTradeTime = 1000 * 60 * 60; //hours
 			this.maxTradeTime = this.minTradeTime * 3;
-			this.goalMultiplier = 1.01;
-			this.lossMultiplier = .99;
+			this.goalMultiplier = 1.02;
+			this.lossMultiplier = .985;
 			if(this.transaction){
+				this.side = this.transaction.side;
 				console.log(chalk.yellow(Date.now(), this.transaction.time, Date.now() - this.transaction.time));
-				if((Date.now() - this.transaction.time) > this.maxTradeTime){
+				if(this.side === 'buy' && (Date.now() - this.transaction.time) > this.maxTradeTime){
 					console.log(chalk.magenta('too long'));
-					return Ticker.findOne({
+					Ticker.findOne({
 						where: {
 							product_id: this.transaction.product_id
 						},
@@ -134,17 +136,21 @@ class Gdax {
 						limit: 1
 					}).then( ticker =>{
 						this.ticker = ticker;
-						return this.marketSell(this.transaction.product_id, this.ticker.price, 'time met')
+						this.marketSell(this.transaction.product_id, this.ticker.price, 'time met')
 					});
 				} else {
-					this.side = this.transaction.side;
 					this.pair = this.transaction.product_id;
 					this.product = this.pair.split('-');
 					this.qouteCurrency = this.product[0];
 					this.baseCurrency  = this.product[1];
 					if(this.side === 'sell'){
 						if(this.recs.length > 0 && this.newestBuyRec){
-							console.log(chalk.red(this.newestBuyRec.product_id, this.newestBuyRec.price));
+							console.log('RECBUY', chalk.red(this.newestBuyRec.product_id, this.newestBuyRec.price));
+							console.log('RECBUY', chalk.red(this.newestBuyRec.product_id, this.newestBuyRec.price));
+							console.log('RECBUY', chalk.red(this.newestBuyRec.product_id, this.newestBuyRec.price));
+							console.log('RECBUY', chalk.red(this.newestBuyRec.product_id, this.newestBuyRec.price));
+							console.log('RECBUY', chalk.red(this.newestBuyRec.product_id, this.newestBuyRec.price));
+							console.log('RECBUY', chalk.red(this.newestBuyRec.product_id, this.newestBuyRec.price));
 							this.marketBuy(this.newestBuyRec.product_id, this.newestBuyRec.price, 'rec buy');
 						};
 					};
@@ -185,9 +191,9 @@ class Gdax {
 			};
 		});
 	}
-marketBuy(product_id, price){
+marketBuy(product_id, price, reason){
 		console.log('marketbuy', product_id, price);
-		this.product_id = this.rec.product_id;
+		this.product_id = product_id;
 		this.price = price;
 		this.currencyNeeded = this.product_id.split('-')[1]; 
 		Account.findOne({where: {currency: this.currencyNeeded}})
@@ -215,14 +221,15 @@ marketBuy(product_id, price){
 							price: 			this.price,
 							amount:         data.amount,
 							side:  			data.side,
-							time:           Date.now()
+							time:           Date.now(),
+							reason:         reason
 						});
 					};
 				});
 			};
 		});
 	};
-	marketSell(product_id, price){
+	marketSell(product_id, price, reason){
 		console.log('marketsell', product_id, price);
 		//price here is pointless in a market sell. just used to mark a price in the 
 		//transaction table 
@@ -249,7 +256,8 @@ marketBuy(product_id, price){
 							price: 			price,
 							amount:         data.amount,
 							side:  			data.side,
-							time:           Date.now()
+							time:           Date.now(),
+							reason:         reason
 						});
 					};
 				});

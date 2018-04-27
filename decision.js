@@ -13,7 +13,7 @@ class Decision {
 		this.gdax = service;
 	};
 	evaluate(buffer){
-		console.log('#evaluate');
+		console.log(chalk.green('#evaluate'));
 		//* sorta prod
 		this.buffer = buffer;
 		this.buffer.strats.clear();
@@ -79,7 +79,7 @@ class Decision {
 		this.buffer = buffer;
 		if(this.buffer){
 			this.strats = this.buffer.strats.data;
-			console.log('numstrats', this.strats.length);
+			console.log(chalk.green('#runAlgo num prods', this.strats.length));
 			if(this.strats){
 				//this.historical(this.strats);
 				this.strats.forEach(strat =>{
@@ -101,8 +101,19 @@ class Decision {
 						if(this.atr){
 							this._adx  		= this.adx[0][this.adx[0].length-1]; 
 						};
+						this._cciRec = false;
 						if(this.cci){
-							this._cci		= this.cci[0][this.cci[0].length-1];
+							this._cci_recent		= this.cci[0][this.cci[0].length-1];
+							this._cci_previous		= this.cci[0][this.cci[0].length-2];
+							console.log(chalk.magenta(this._cci_recent, this._cci_previous));
+							if(this._cci_recent !== this._cci_previous){
+								if(this._cci_recent > 100 && this._cci_previous < -100){
+									this._cciRec = true;
+								};
+								if(this._cci_recent < -100 && this._cci_previous > 100){
+									this._cciRec = true;
+								};
+							};
 						};
 						if (this.rsi){
 							this._rsi		= this.rsi[0][this.rsi[0].length-1];
@@ -139,9 +150,14 @@ class Decision {
 						this._vosc = 21;
 						this._ultOsc = 71;	
 						*/
-						if(this._volume > this._vema * 1.4){
-							if(this._vosc > 20){
-								if(this._ultOsc > 70){
+						console.log(chalk.cyan(this._cciRec, this._volume, this._vema, this._vosc, this._ultOsc));
+						if(this._volume > this._vema * 1.35){
+							if(this._cciRec){
+								console.log(chalk.magenta('#'));
+								if(this._vosc > 20){
+									console.log(chalk.magenta('##'));
+									if(this._ultOsc > 70){
+										console.log(chalk.magenta('###'));
 									//market sell here
 									this.sellEvent = {
 										product_id: this.strat.product_id,
@@ -160,10 +176,11 @@ class Decision {
 									} else {
 										this.buffer.recs.insert(this.sellEvent);
 									}
-									console.log(chalk.green("# SELL -> overbought", this.strat.product_id, this.strat.sets.allPrices[this.strat.sets.allPrices.length-1]));
+									console.log(chalk.magenta("# SELL EVENT CREATED-> overbought", this.strat.product_id, this.strat.sets.allPrices[this.strat.sets.allPrices.length-1]));
 									Model.Rec.create(this.sellEvent);
 								};
 								if(this._ultOsc < 30){
+									console.log(chalk.magenta('###'));
 									//market buy
 									this.buyEvent = {
 										product_id: this.strat.product_id,
@@ -186,19 +203,18 @@ class Decision {
 									} else {
 										this.buffer.recs.insert(this.buyEvent);
 									}
-									
-									console.log(chalk.red('# BUY  -> over sold', this.strat.product_id, this.strat.sets.allPrices[this.strat.sets.allPrices.length-1]));
+									console.log(chalk.magenta('# BUY EVENT CREATED  -> over sold', this.strat.product_id, this.strat.sets.allPrices[this.strat.sets.allPrices.length-1]));
 									Model.Rec.create(this.buyEvent);
 								};
 							};
 						};
-					//};
+					};
 				});
 			};
 		};
 	};
 	runStrats(buffer, prods, period){
-		console.log('#runstrats')
+		console.log(chalk.green('#runstrats'));
 		var buffer = buffer.strats;
 		//console.log('-------',buffer); 
 		this.prods = prods;
@@ -264,6 +280,7 @@ class Decision {
 		});
 		return Promise.all(this.strats.map( s =>{
 			return Promise.all(Object.values(s.strategies)).then( (data)=>{
+				console.log(chalk.gray('_stategyData', data.length))
 				s.data = data;
 				buffer.insert(s);
 				return data;
@@ -276,10 +293,10 @@ class Decision {
 					data       	: data
 				};
 				*/
-		});
+			});
 	};
 	createCandles(set, period, id){
-		console.log('#createcandles');
+		console.log(chalk.gray('_createcandles'));
 		this.set = set;
 		this.period = period;
 		this.candles = [];
