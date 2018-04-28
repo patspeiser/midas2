@@ -105,12 +105,13 @@ class Decision {
 						if(this.cci){
 							this._cci_recent		= this.cci[0][this.cci[0].length-1];
 							this._cci_previous		= this.cci[0][this.cci[0].length-2];
+							this._cci_distant		= this.cci[0][this.cci[0].length-3];
 							console.log(chalk.magenta(this._cci_recent, this._cci_previous));
-							if(this._cci_recent !== this._cci_previous){
-								if(this._cci_recent > 100 && this._cci_previous < -100){
+							if(this._cci_recent !== this._cci_previous && this._cci_recent !== this._cci_previous){
+								if( (this._cci_recent > 50 && this._cci_previous < 0) || (this._cci_recent > 50 && this._cci_distant < 0) ){
 									this._cciRec = true;
 								};
-								if(this._cci_recent < -100 && this._cci_previous > 100){
+								if( (this._cci_recent < -50 && this._cci_previous > 0) || (this._cci_recent < -50  && this._cci_distant > 0) ){
 									this._cciRec = true;
 								};
 							};
