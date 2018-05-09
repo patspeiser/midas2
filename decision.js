@@ -75,10 +75,9 @@ class Decision {
 			return this.getStrategySetById(this.index, this.set);
 		};
 	};
-	runAlgo(buffer){
-		this.buffer = buffer;
-		if(this.buffer){
-			this.strats = this.buffer.strats.data;
+	runAlgo(strats){
+		this.strats = this.strats;
+		if(this.strats){
 			console.log(chalk.green('#runAlgo num prods', this.strats.length));
 			if(this.strats){
 				//this.historical(this.strats);
@@ -152,13 +151,10 @@ class Decision {
 						this._ultOsc = 71;	
 						*/
 						console.log(chalk.cyan(this._cciRec, this._volume, this._vema, this._vosc, this._ultOsc));
-						if(this._volume > this._vema * 1.35){
+						if(this._volume > this._vema * 1.30){
 							if(this._cciRec){
-								console.log(chalk.magenta('#'));
 								if(this._vosc > 20){
-									console.log(chalk.magenta('##'));
-									if(this._ultOsc > 70){
-										console.log(chalk.magenta('###'));
+									if(this._ultOsc > 65){
 									//market sell here
 									this.sellEvent = {
 										product_id: this.strat.product_id,
@@ -177,11 +173,10 @@ class Decision {
 									} else {
 										this.buffer.recs.insert(this.sellEvent);
 									}
-									console.log(chalk.magenta("# SELL EVENT CREATED-> overbought", this.strat.product_id, this.strat.sets.allPrices[this.strat.sets.allPrices.length-1]));
+									console.log(Date.now(), chalk.magenta("# SELL EVENT CREATED-> overbought", this.strat.product_id, this.strat.sets.allPrices[this.strat.sets.allPrices.length-1]));
 									Model.Rec.create(this.sellEvent);
-								};
-								if(this._ultOsc < 30){
-									console.log(chalk.magenta('###'));
+									};
+									if(this._ultOsc < 35){
 									//market buy
 									this.buyEvent = {
 										product_id: this.strat.product_id,
@@ -204,7 +199,7 @@ class Decision {
 									} else {
 										this.buffer.recs.insert(this.buyEvent);
 									}
-									console.log(chalk.magenta('# BUY EVENT CREATED  -> over sold', this.strat.product_id, this.strat.sets.allPrices[this.strat.sets.allPrices.length-1]));
+									console.log(Date.now(), chalk.magenta('# BUY EVENT CREATED  -> over sold', this.strat.product_id, this.strat.sets.allPrices[this.strat.sets.allPrices.length-1]));
 									Model.Rec.create(this.buyEvent);
 								};
 							};
@@ -279,6 +274,7 @@ class Decision {
 				}
 			}
 		});
+		var that = this;
 		return Promise.all(this.strats.map( s =>{
 			return Promise.all(Object.values(s.strategies)).then( (data)=>{
 				console.log(chalk.gray('_stategyData', data.length))
@@ -287,6 +283,7 @@ class Decision {
 				return data;
 			});	
 		})).then(function(data){
+			that.runAlgo(data);
 			/*
 				return {
 					sets     	: that.priceSets, 
