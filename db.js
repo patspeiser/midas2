@@ -47,6 +47,11 @@ const Transaction = db.define('transaction', {
  	time:           {type: db.Sequelize.STRING}, 
 	amount:         {type: db.Sequelize.FLOAT}, 
 });
+const Fee = db.define('fee', {
+	transaction_id:  {type: db.Sequelize.STRING},
+	fee: 			 {type: db.Sequelize.FLOAT},
+});
+
 const Rec = db.define('rec', {
 	product_id: {type: db.Sequelize.STRING},
 	price: 		{type: db.Sequelize.FLOAT},

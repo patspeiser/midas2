@@ -31,6 +31,25 @@ class Gdax {
 		//this.runAlgo   		= new Process(this, this.runAlgo, 			1000 * 60 * 1);
 		//this.historical       = new Process(this, this.historical, 		1000 * 5);
 		this.infolog 			= new Process(this, this.infolog, 1000 * 30);
+		this.orderTest 			= new Process(this, this.orderTest, 1000 * 3);
+
+	};
+	orderTest(){
+		Transaction.findOne({
+			order: [['id', 'DESC']]
+		}).then( (transaction)=>{
+			this.transaction = transaction;
+			console.log(chalk.yellow(JSON.stringify(this.transaction)));
+			/*
+			this.client.getOrder('5554de48-8fc9-41d5-ab1c-da8975447011', (a,b,c)=>{
+				console.log('#_#', c);
+			});
+
+			this.client.getOrder('94015a4e-046e-439d-9282-62a9e3f71167', (a,b,c)=>{
+				console.log('#_#', c);
+			});
+			*/		
+		});
 	};
 	getRecs(){
 		this.recs = this.buffers.recs.chain().data();
@@ -84,9 +103,7 @@ class Gdax {
 		this.newestRec;
 		this.newestBuyRec;
 		this.newestSellRec;
-		this.recs = this.buffers.recs.chain().data();
 		this.validRecTime = Date.now() - (1000 * 60 * 3) ;
-		console.log(this.validRecTime);
 		Rec.findAll({
 			where: {
 				createdAt: {
@@ -197,15 +214,7 @@ class Gdax {
 										console.log('now inadahere', chalk.green(this.transaction.product_id, this.ticker.price));
 										return this.marketSell(this.transaction.product_id, this.ticker.price, 'rec sell');
 									} else {
-										// ?
-										//this.recs.forEach( rec =>{
-										//	if(rec.product_id === this.transaction.product_id){
-										//		if(rec.side === 'sell'){
-										//			console.log(chalk.green(this.transaction.product_id, this.ticker.price));
-										//			this.marketSell(this.transaction.product_id, this.ticker.price, 'idk');
-										//		};
-										//	};
-										//});
+										//	
 									};
 								}
 							};
@@ -235,7 +244,14 @@ marketBuy(product_id, price, reason){
 					funds: this.funds, 
 					product_id: this.product_id,
 				};
-				
+				Ticker.findOne({
+					where: {
+						product_id: product_id, 
+					},
+					order: [['id', 'DESC']]
+				}).then( (ticker)=>{
+					console.log('TICKER', ticker);
+				});	
 				console.log(chalk.magenta(JSON.stringify(this.orderParams)));
 				this.client.placeOrder(this.orderParams, (err, res, data)=>{
 						console.log('#_#MARKETBUYDATA', data);
@@ -243,17 +259,18 @@ marketBuy(product_id, price, reason){
 						console.log('err', err);
 					} else {
 						this.buffers.recs.clear();
-						this.client.getOrder(data.id, (order)=>{
-							console.log('#_#MARKETBUY', order);
-						});
-						Transaction.create({
-							transaction_id: data.id, 
-							product_id:  	data.product_id,
-							price: 			this.price,
-							amount:         data.amount,
-							side:  			data.side,
-							time:           Date.now(),
-							reason:         reason
+						this.client.getOrder(data.id, (err, req, res)=>{
+							console.log('#_#MARKETBUY', res);
+							this.price = res.executed_value / res.filled_size;
+							Transaction.create({
+								transaction_id: data.id, 
+								product_id:  	data.product_id,
+								price: 			this.price,
+								amount:         data.amount,
+								side:  			data.side,
+								time:           Date.now(),
+								reason:         reason
+							});
 						});
 					};
 				});
@@ -276,7 +293,15 @@ marketBuy(product_id, price, reason){
 					type: 'market',
 					product_id: this.product_id,
 					size: this.account.available
-				}	
+				}
+				Ticker.findOne({
+					where: {
+						product_id: product_id, 
+					},
+					order: [['id', 'DESC']]
+				}).then( (ticker)=>{
+					console.log('TICKER', ticker);
+				});		
 				console.log(chalk.magenta(JSON.stringify(this.orderParams)));
 				this.client.placeOrder(this.orderParams, (err, res, data)=>{
 					if (err){
@@ -284,17 +309,18 @@ marketBuy(product_id, price, reason){
 						
 					} else {
 						this.buffers.recs.clear();
-						this.client.getOrder(data.id, (order)=>{
-							console.log('#_#MARKETSELL', order)
-						});
-						Transaction.create({
-							transaction_id: data.id, 
-							product_id:  	data.product_id,
-							price: 			price,
-							amount:         data.amount,
-							side:  			data.side,
-							time:           Date.now(),
-							reason:         reason
+						this.client.getOrder(data.id, (err, req, res)=>{
+							console.log('#_#MARKETSELL', res)
+							this.price = res.executed_value / res.filled_size;
+							Transaction.create({
+								transaction_id: data.id, 
+								product_id:  	data.product_id,
+								price: 			this.price,
+								amount:         data.amount,
+								side:  			data.side,
+								time:           Date.now(),
+								reason:         reason
+							});
 						});
 					};
 				});
