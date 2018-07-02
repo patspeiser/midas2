@@ -8,6 +8,7 @@ const Strategy 	= require(path.join(__dirname, 'Strategy'));
 const Model 	= require(path.join(__dirname, 'Db')).models;
 const T = require('tulind');
 
+
 class Decision {
 	constructor(service){
 		this.gdax = service;
@@ -18,16 +19,17 @@ class Decision {
 		this.buffer = buffer;
 		this.buffer.strats.clear();
 		return new Promise( (resolve, reject)=>{
-			this.interval = {amount: 60*4, type: 'minutes'};
+			this.interval = {amount: 12, type: 'hours'};
 			this.products = ['BTC-USD','BCH-USD', 'ETH-USD','LTC-USD'];	
 			return this.getProducts(this.interval, this.products, false, 50000)
 			.then( prods=>{
 				if(prods){
-					this.runStrats(this.buffer, prods, 5);
+					this.runStrats(this.buffer, prods, 6);
 				};
 			});
 		});
 	};
+	
 	historical(buffers){
 		this.buffers = buffers; 
 		this.buffer  = this.buffers.strats;
@@ -50,7 +52,7 @@ class Decision {
 							//console.log(chalk.green(this.period));
 							this.candles = this.createCandles(this.prod, this.period, this.product_id);
 							console.log(chalk.cyan('candles', this.candles.length));
-						}
+						};
 					});
 				};
 			});
@@ -151,10 +153,10 @@ class Decision {
 						this._ultOsc = 71;	
 						*/
 						console.log(chalk.cyan(this._cciRec, this._volume, this._vema, this._vosc, this._ultOsc));
-						if(this._volume > this._vema * 1.30){
+						if(this._volume > this._vema * 1.35){
 							if(this._cciRec){
 								if(this._vosc > 20){
-									if(this._ultOsc > 65){
+									if(this._ultOsc > 70){
 									//market sell here
 									this.sellEvent = {
 										product_id: this.strat.product_id,
@@ -162,8 +164,8 @@ class Decision {
 										price: this.strat.sets.allPrices[this.strat.sets.allPrices.length-1],
 										time: Date.now()
 									};
-									this.recs = this.buffer.recs.chain().data();
-									if(this.recs && this.recs.length > 0){
+									//this.recs = this.buffer.recs.chain().data();
+									/*if(this.recs && this.recs.length > 0){
 										this.recs.forEach( rec =>{
 											if (rec.product_id === this.sellEvent.product_id){
 												this.buffer.recs.remove(rec);
@@ -172,11 +174,11 @@ class Decision {
 										this.buffer.recs.insert(this.sellEvent);
 									} else {
 										this.buffer.recs.insert(this.sellEvent);
-									}
+									}*/
 									console.log(Date.now(), chalk.magenta("# SELL EVENT CREATED-> overbought", this.strat.product_id, this.strat.sets.allPrices[this.strat.sets.allPrices.length-1]));
 									Model.Rec.create(this.sellEvent);
-									};
-									if(this._ultOsc < 35){
+								};
+								if(this._ultOsc < 30){
 									//market buy
 									this.buyEvent = {
 										product_id: this.strat.product_id,
@@ -184,6 +186,7 @@ class Decision {
 										price: this.strat.sets.allPrices[this.strat.sets.allPrices.length-1],
 										time: Date.now()
 									};
+									/*
 									this.recs = this.buffer.recs.chain().data();
 									if(this.recs && this.recs.length > 0){
 										this.recs.forEach( rec =>{
@@ -199,6 +202,7 @@ class Decision {
 									} else {
 										this.buffer.recs.insert(this.buyEvent);
 									}
+									*/
 									console.log(Date.now(), chalk.magenta('# BUY EVENT CREATED  -> over sold', this.strat.product_id, this.strat.sets.allPrices[this.strat.sets.allPrices.length-1]));
 									Model.Rec.create(this.buyEvent);
 								};
@@ -206,12 +210,12 @@ class Decision {
 						};
 					};
 				});
-			};
-		};
-	};
-	runStrats(buffer, prods, period){
-		console.log(chalk.green('#runstrats'));
-		var buffer = buffer.strats;
+};
+};
+};
+runStrats(buffer, prods, period){
+	console.log(chalk.green('#runstrats'));
+	var buffer = buffer.strats;
 		//console.log('-------',buffer); 
 		this.prods = prods;
 		this.strats = [];
@@ -350,6 +354,36 @@ class Decision {
 		//console.log(chalk.gray(this.candles.length));
 		return this.candles;	
 	};
+	runBlaster(buffers){
+		this.buffers = buffers;
+		this.getProductsByInterval(null,['BTC-USD']);
+
+	};
+	getProductsByInterval(interval, productList, raw, limit){
+		this.promises = [];
+		this.now = new Date(); 
+		this.raw = raw || false;
+		this.limit = limit || 1000000;
+
+		this.from = moment(this.now).subtract(7, 'days').format();
+
+		Ticker.findAll({ 
+			where: {
+				product_id: productList[0],
+				createdAt: {
+					[Op.gt]: this.from
+				},
+			},
+			order: [['id', 'DESC']],
+			limit: this.limit,
+			raw:   this.raw
+		}).then( (tickers)=>{
+			//create candles
+			//run strategies against candles
+			//new stuff
+		})
+	}
+
 	getProducts(interval, productList, raw, limit){
 		this.promises = []; 
 		this.now = new Date();
