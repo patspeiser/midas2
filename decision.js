@@ -299,11 +299,10 @@ runStrats(buffer, prods, period){
 	};
 	createCandles(set, period, id){
 		console.log(chalk.gray('_createcandles'));
-		this.set = set;
-		this.period = period;
 		this.candles = [];
 		this.set = set;
 		this.period = period * ( 60 * 1000 );
+		
 		if(this.set){
 			this.startTime = new Date(this.set[0].time).getTime();
 			this.endTime   = parseFloat(this.startTime) + parseFloat(this.period);
@@ -378,11 +377,13 @@ runStrats(buffer, prods, period){
 			limit: this.limit,
 			raw:   this.raw
 		}).then( (tickers)=>{
+			this.tickers = tickers.reverse();
+			this.candles = this.createCandles(this.tickers, 10, null);
 			//create candles
 			//run strategies against candles
 			//new stuff
 		})
-	}
+	};
 
 	getProducts(interval, productList, raw, limit){
 		this.promises = []; 

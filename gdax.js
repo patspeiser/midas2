@@ -22,17 +22,17 @@ class Gdax {
 		this.decision  = new Decision(this);
 	};
 	init(){
-		//this.ingestStream();
+		this.ingestStream();
 		//this.processBuffer  	= new Process(this, this.processStream,  	1000 * 10);
 		this.updateAccounts		= new Process(this, this.updateAccounts, 	1000 * 5 );
-		//this.evaluate    		= new Process(this, this.evaluate, 			1000 * 60 * 1);
-		//this.determine   		= new Process(this, this.determine, 		1000 * 60 * 3);
+		this.evaluate    		= new Process(this, this.evaluate, 			1000 * 60 * 1);
+		this.determine   		= new Process(this, this.determine, 		1000 * 60 * 3);
 		this.getRecs    		= new Process(this, this.getRecs, 			1000 * 5 * 1);
 		//this.runAlgo   		= new Process(this, this.runAlgo, 			1000 * 60 * 1);
 		//this.historical       = new Process(this, this.historical, 		1000 * 5);
-		//this.infolog 			= new Process(this, this.infolog, 1000 * 30);
+		this.infolog 			= new Process(this, this.infolog, 1000 * 30);
 		//this.orderTest 			= new Process(this, this.orderTest, 1000 * 3);
-		this.blaster = new Process(this, this.runBlaster, 1000 * 5);
+		this.blaster = new Process(this, this.runBlaster, 1000 * 30);
 
 	};
 	orderTest(){
