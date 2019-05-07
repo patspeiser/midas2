@@ -1,6 +1,6 @@
 const Sequelize = require('sequelize');
 const Op = Sequelize.Op;
-const urlString = "postgres://postgres:postgres@localhost/midas2";
+const urlString = "";
 const db = new Sequelize(process.env.DATABASE_URL || urlString, {logging: false});
 
 const Ticker = db.define('ticker', {
